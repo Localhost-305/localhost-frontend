@@ -1,0 +1,24 @@
+.custom_menu {
+  background-color: #F4F1E9; /* Cor de fundo do menu */
+  width: 240px;
+}
+
+.custom_menu .ant-menu-item {
+  color: #000; /* Cor do texto do item do menu */
+}
+
+.custom_menu .ant-menu-item:hover {
+  background-color: #ccc; /* Cor de fundo ao passar o mouse */
+  color: #000; /* Cor do texto ao passar o mouse */
+}
+
+.custom_menu .ant-menu-item-selected {
+  background-color: #aaa; /* Cor de fundo do item selecionado */
+  color: #fff; /* Cor do texto do item selecionado */
+}
+
+@media (max-width: 768px) {
+  .custom_menu {
+    width: 100px;
+  }
+}

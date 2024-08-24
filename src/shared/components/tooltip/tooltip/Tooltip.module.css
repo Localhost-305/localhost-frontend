@@ -1,0 +1,21 @@
+.container_tooltip{
+    position: relative;
+    /* :hover{
+        display: block;
+    } */
+}
+
+.container_tooltip:hover .container_tooltip_external {
+    display: block;
+}
+
+.container_tooltip_external{
+    display: none;
+    position: absolute;
+    margin-left: 100px;
+    padding: 4px;
+    border-radius: 3px;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 10;
+}
+
