@@ -11,6 +11,7 @@ import InputPassword from '../../../shared/components/inputs/inputPasswordAntd/I
 import InputAD from '../../../shared/components/inputs/inputAntd/InputAD';
 import { useRequests } from '../../../shared/hooks/useRequests';
 import { useLoading } from '../../../shared/components/loadingProvider/LoadingProvider';
+import { DashboardRoutesEnum } from '../../dashboard/routes';
  
  
 const LoginScreen = () => {
@@ -34,10 +35,14 @@ const LoginScreen = () => {
         authRequest({
             email: email,
             password: password
-        }, navigate).then(() => setLoading(false));
-    }
- 
-   
+        }, navigate)
+        .then(() => {
+            navigate(DashboardRoutesEnum.DASHBOARD); 
+            setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    };
+    
     return (
         <div className={styles.container_login_screen}>
             {isLoading && <FirstScreen/>}

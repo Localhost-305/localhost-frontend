@@ -1,8 +1,22 @@
 import React, { useRef, useEffect } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
+import { useNavigate } from "react-router-dom";
+import { getAuthorizationToken } from "../../../shared/functions/connection/auth";
+import { DashboardRoutesEnum } from '../routes';
+import { LoginRoutesEnum } from "../../login/routes";
 
 const DashboardScreen = () => {
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = getAuthorizationToken();
+    if (!token) {
+        navigate(LoginRoutesEnum.LOGIN); 
+    }
+  }, [navigate]);
+
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
