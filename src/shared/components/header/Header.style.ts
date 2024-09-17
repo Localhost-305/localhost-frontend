@@ -9,7 +9,7 @@ export const HeaderContainer = styled.header`
     align-items: center;
     justify-content: flex-end;
     padding-right: 16px;
-    background-color: #82B04D;
+    background-color: #F18524;
     -webkit-box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);
     -moz-box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);
     box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);

@@ -63,7 +63,7 @@ const Header = () => {
                         alignItems: 'center', 
                         margin: '0px 15px 0px 0px', 
                         height: '45px', 
-                        backgroundColor: '#82B04D',
+                        backgroundColor: '#6C757D',
                         color: 'black',
                         fontWeight: 500
                     }}>

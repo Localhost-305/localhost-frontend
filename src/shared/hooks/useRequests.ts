@@ -37,10 +37,10 @@ export const useRequests = () => {
 
     const authRequest = async (body: unknown, navigate: ReturnType<typeof useNavigate>): Promise<void>  => {
         await axios.post(URL_AUTH, body)
-        .then((data:any) => {
-            setUser(data.user);
-            setAuthorizationToken(data.tokenJWT);
-            setUserData(data.user.name);
+        .then((info:any) => {
+            setUser(info.data.user);
+            setAuthorizationToken(info.data.tokenJWT);
+            setUserData(info.data.user.name);
             navigate(UserRoutesEnum.USER);
         }).catch((error: Error) => {
             console.log(error.message);

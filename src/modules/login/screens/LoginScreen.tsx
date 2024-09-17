@@ -12,6 +12,7 @@ import InputAD from '../../../shared/components/inputs/inputAntd/InputAD';
 import { useRequests } from '../../../shared/hooks/useRequests';
 import { useLoading } from '../../../shared/components/loadingProvider/LoadingProvider';
 import { DashboardRoutesEnum } from '../../dashboard/routes';
+import { UserRoutesEnum } from '../../user/routes';
  
  
 const LoginScreen = () => {
@@ -37,7 +38,7 @@ const LoginScreen = () => {
             password: password
         }, navigate)
         .then(() => {
-            navigate(DashboardRoutesEnum.DASHBOARD); 
+            navigate(UserRoutesEnum.USER); 
             setLoading(false);
         })
         .catch(() => setLoading(false));

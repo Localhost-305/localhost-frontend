@@ -112,6 +112,7 @@ const User = () => {
     return(
         <Screen listBreadcrumb={listBreadcrumb}> 
             {isLoading && <FirstScreen/>}
+            
             <BoxButtons>
                 <LimitedContainer width={240}>
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
