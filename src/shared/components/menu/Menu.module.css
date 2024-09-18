@@ -1,15 +1,15 @@
 .custom_menu {
-  background-color: #F4F1E9; /* Cor de fundo do menu */
+  background-color: var(--light); /* Cor de fundo do menu */
   width: 240px;
 }
 
 .custom_menu .ant-menu-item {
-  color: #000; /* Cor do texto do item do menu */
+  color: var(--black) ; /* Cor do texto do item do menu */
 }
 
 .custom_menu .ant-menu-item:hover {
-  background-color: #ccc; /* Cor de fundo ao passar o mouse */
-  color: #000; /* Cor do texto ao passar o mouse */
+  background-color: var(--orange); /* Cor de fundo ao passar o mouse */
+  color: var(--white); /* Cor do texto ao passar o mouse */
 }
 
 .custom_menu .ant-menu-item-selected {

@@ -63,8 +63,8 @@ const Header = () => {
                         alignItems: 'center', 
                         margin: '0px 15px 0px 0px', 
                         height: '45px', 
-                        backgroundColor: '#6C757D',
-                        color: 'black',
+                        backgroundColor: 'var(--orange)',
+                        color: 'var(--white)',
                         fontWeight: 500
                     }}>
                         <Avatar

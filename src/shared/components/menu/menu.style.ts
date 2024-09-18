@@ -1,4 +1,4 @@
-import { Typography } from "antd";
+import { Typography , Menu as MenuAntd } from "antd";
 import styled from "styled-components";
 
 const { Text } = Typography;
@@ -9,7 +9,7 @@ export const ContainerMenu = styled.div`
     top: 0;
     bottom: 0;
     width: 240px;
-    background-color: var(--beige);
+    background-color: var(--light);
     -webkit-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     -moz-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
@@ -31,6 +31,31 @@ export const ContainerLogoName = styled.div`
 
     @media (max-width: 768px) {
         height: 60px;
+    }
+`;
+
+export const StyledMenu = styled(MenuAntd)`
+    background-color: var(--light);
+    border-right: none; /* Remover borda direita padrão do Ant Design */
+
+    .ant-menu-item {
+        color: var(--black); /* Cor do texto do item */
+    }
+
+    .ant-menu-item:hover {
+        background-color: var(--orange); /* Cor de fundo no hover */
+        color: var(--white); /* Cor do texto no hover */
+    }
+
+    .ant-menu-item-selected {
+        background-color: var(--orange) !important; /* Cor de fundo do item selecionado */
+        color: var(--white); /* Cor do texto do item selecionado */
+    }
+
+    @media (max-width: 768px) {
+        .ant-menu-item {
+            font-size: 12px; /* Ajustar o tamanho do texto para telas menores */
+        }
     }
 `;
 

@@ -7,8 +7,8 @@ import { HomeOutlined,
         
 import styles from "./Menu.module.css";
 import NumCalculator from 'antd/es/theme/util/calc/NumCalculator';
-import logo from '../../../../public/logo loga l.jpg';
-import { ContainerLogoName, ContainerMenu } from "./menu.style";
+import logo from '../../../../public/logo-sem-fundo.png';
+import { ContainerLogoName, ContainerMenu, StyledMenu } from './menu.style';
 import { useWindowSize } from '../../hooks/useWindowSize';
 
 
@@ -52,10 +52,10 @@ const Menu = () => {
     return (
         <ContainerMenu>
             <ContainerLogoName>
-                <img src={logo} style={{width: '170px', height: '100px', margin: '0px 16px'}}/>
+                <img src={logo} style={{width: '190px', height: '80px', margin: '0px 16px', objectFit: 'contain'}}/>
                 {/* <NameCompany>Company</NameCompany> */}
             </ContainerLogoName>
-            <MenuAntd onClick={onClick}
+            <StyledMenu onClick={onClick}
                 className={styles.custom_menu}
                 selectedKeys={[current]}
                 mode="vertical"

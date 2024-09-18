@@ -11,9 +11,7 @@ import InputPassword from '../../../shared/components/inputs/inputPasswordAntd/I
 import InputAD from '../../../shared/components/inputs/inputAntd/InputAD';
 import { useRequests } from '../../../shared/hooks/useRequests';
 import { useLoading } from '../../../shared/components/loadingProvider/LoadingProvider';
-import { DashboardRoutesEnum } from '../../dashboard/routes';
-import { UserRoutesEnum } from '../../user/routes';
- 
+import { DashboardRoutesEnum } from '../../dashboard/routes'; 
  
 const LoginScreen = () => {
     const [email, setEmail] = useState<string>('');
@@ -38,7 +36,7 @@ const LoginScreen = () => {
             password: password
         }, navigate)
         .then(() => {
-            navigate(UserRoutesEnum.USER); 
+            navigate(DashboardRoutesEnum.DASHBOARD); 
             setLoading(false);
         })
         .catch(() => setLoading(false));
