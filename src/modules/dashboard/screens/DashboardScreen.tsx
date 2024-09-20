@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
 import { useNavigate } from "react-router-dom";
@@ -9,12 +9,23 @@ import { LoginRoutesEnum } from "../../login/routes";
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-import { TableProps } from 'antd';
-import Table from '../../../shared/components/table/Table';
 
+interface Job {
+  job_id: number;                
+  job_title: string;             
+  number_of_positions: number;   
+  job_requirements: string;      
+  job_status: string;           
+  location: string;              
+  responsible_person: string;    
+  opening_date: string;          
+  closing_date: string;         
+  candidates: number;            
+}
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
   const { isLoading, setLoading } = useLoading();
 
   useEffect(() => {
@@ -31,14 +42,25 @@ const DashboardScreen = () => {
     }
 ]
 
+  useEffect(() => {
+    fetch('/jobs.json') 
+      .then(response => response.json())
+      .then(data => setJobs(data.jobs))
+      .catch(error => console.error('Erro ao carregar o JSON:', error));
+  }, []);
+
+
 // GRÁFICO
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!chartRef.current || jobs.length === 0) return;
 
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
+
+    const jobNames = jobs.map((job: Job) => job.job_title);  
+    const jobCandidates = jobs.map((job: Job) => job.candidates);
 
     const option: EChartOption = {
       tooltip: {
@@ -56,7 +78,7 @@ const DashboardScreen = () => {
       xAxis: [
         {
           type: 'category',
-          data: ['Cargo', 'Cargo', 'Cargo', 'Cargo', 'Cargo', 'Cargo', 'Cargo'],
+          data: jobNames,
           axisTick: {
             alignWithLabel: true
           }
@@ -69,10 +91,10 @@ const DashboardScreen = () => {
       ],
       series: [
         {
-          name: 'Direct',
+          name: 'Candidatos',
           type: 'bar',
           barWidth: '60%',
-          data: [100, 152, 200, 334, 310, 230, 120],
+          data: jobCandidates,
           itemStyle: {
             color: '#fd7e14'
           }
@@ -85,59 +107,7 @@ const DashboardScreen = () => {
     return () => {
       myChart.dispose();
     };
-  }, []);
-
-  // TABELAS
-  interface DataType {
-    key: string;
-    name: string;
-    age: number;
-    address: string;
-    tags: string[];
-  }
-  
-  const columns: TableProps<DataType>['columns'] = [
-    {
-      title: 'Nome',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => <a>{text}</a>,
-    },
-    {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-    }
-  ];
-  
-  const data: DataType[] = [
-    {
-      key: '1',
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      tags: ['nice', 'developer'],
-    },
-    {
-      key: '2',
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      tags: ['loser'],
-    },
-    {
-      key: '3',
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sydney No. 1 Lake Park',
-      tags: ['cool', 'teacher'],
-    },
-  ];
+  }, [jobs]);
 
   return(
       <Screen listBreadcrumb={listBreadcrumb}> 
@@ -147,9 +117,9 @@ const DashboardScreen = () => {
               <LimitedContainer width={240}>
               </LimitedContainer>
           </BoxButtons>
-          <Table columns={columns} dataSource={data} />
       </Screen>
   )
 };
 
 export default DashboardScreen;
+

@@ -32,9 +32,9 @@ const Menu = () => {
         {
           key: 'Home',
           icon: <HomeOutlined />,
-          label: 'Aprovações',
-        },
-        { 
+          label: 'Home',
+        }
+        /*{ 
           key: 'users_key',
           icon: <UserOutlined />, 
           label: 'Usuários',
@@ -42,7 +42,7 @@ const Menu = () => {
               { key: 'user_consult', label: 'Consultar', onClick: () => null}, // use this to navigate => navigate(UserRoutesEnum.USER)
               { key: 'user_insert', label: 'Cadastrar', onClick: () => NumCalculator},
           ], 
-        }
+        }*/
     ];
   
     const onClick: MenuProps['onClick'] = (e) => {
