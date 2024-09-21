@@ -9,23 +9,14 @@ import { LoginRoutesEnum } from "../../login/routes";
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-
-interface Job {
-  job_id: number;                
-  job_title: string;             
-  number_of_positions: number;   
-  job_requirements: string;      
-  job_status: string;           
-  location: string;              
-  responsible_person: string;    
-  opening_date: string;          
-  closing_date: string;         
-  candidates: number;            
-}
+import { DatePicker, Space } from 'antd';
+import type { DatePickerProps, GetProps } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { JobsType } from '../../../shared/types/JobsType';
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<JobsType[]>([]);
   const { isLoading, setLoading } = useLoading();
 
   useEffect(() => {
@@ -43,9 +34,52 @@ const DashboardScreen = () => {
 ]
 
   useEffect(() => {
+    setJobs([
+      {
+        "role": "Analista",    
+        "quantity": 25
+      },
+      {
+        "role": "Desenvolvedor",
+        "quantity": 30
+      },
+      {
+        "role": "DevOps",
+        "quantity": 15
+      },
+      {
+        "role": "Designer",
+        "quantity": 20
+      },
+      {
+        "role": "Suporte",
+        "quantity": 28
+      }
+    ]);
     fetch('/jobs.json') 
       .then(response => response.json())
-      .then(data => setJobs(data.jobs))
+      .then(data => setJobs([
+        {
+          "role": "Analista",    
+          "quantity": 25
+        },
+        {
+          "role": "Desenvolvedor",
+          "quantity": 30
+        },
+        {
+          "role": "DevOps",
+          "quantity": 15
+        },
+        {
+          "role": "Designer",
+          "quantity": 20
+        },
+        {
+          "role": "Suporte",
+          "quantity": 28
+        }
+    ]))
       .catch(error => console.error('Erro ao carregar o JSON:', error));
   }, []);
 
@@ -59,8 +93,8 @@ const DashboardScreen = () => {
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
 
-    const jobNames = jobs.map((job: Job) => job.job_title);  
-    const jobCandidates = jobs.map((job: Job) => job.candidates);
+    const jobNames = jobs.map((job: JobsType) => job.role);  
+    const jobCandidates = jobs.map((job: JobsType) => job.quantity);
 
     const option: EChartOption = {
       tooltip: {
@@ -96,7 +130,8 @@ const DashboardScreen = () => {
           barWidth: '60%',
           data: jobCandidates,
           itemStyle: {
-            color: '#fd7e14'
+            color: '#fd7e14',
+            barBorderRadius: [8, 8, 0, 0]
           }
         }
       ]
@@ -109,15 +144,51 @@ const DashboardScreen = () => {
     };
   }, [jobs]);
 
+
+  type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
+
+  const { RangePicker } = DatePicker;
+
+  const onOk = (value: DatePickerProps['value'] | RangePickerProps['value']) => {
+  console.log('onOk: ', value);
+  };
+
+  const handleClick = () => {
+    setJobs(
+      [
+        {
+          "role": "Analista",    
+          "quantity": 10
+        },
+        {
+          "role": "Desenvolvedor",
+          "quantity": 9
+        },
+        {
+          "role": "DevOps",
+          "quantity": 30
+        },
+        {
+          "role": "Designer",
+          "quantity": 40
+        },
+        {
+          "role": "Suporte",
+          "quantity": 18
+        }
+    ]
+    )
+  }
+
   return(
-      <Screen listBreadcrumb={listBreadcrumb}> 
-          {isLoading && <DashboardScreen/>}
-          <div ref={chartRef} style={{ width: '100%', height: '300px' }} />
-          <BoxButtons>
-              <LimitedContainer width={240}>
-              </LimitedContainer>
-          </BoxButtons>
-      </Screen>
+    <Screen listBreadcrumb={listBreadcrumb}> 
+        {isLoading && <DashboardScreen/>}
+        <RangePicker /> <SearchOutlined onClick={handleClick} />
+        <div ref={chartRef} style={{ width: '100%', height: '300px' }} />
+        <BoxButtons>
+            <LimitedContainer width={240}></LimitedContainer>
+        </BoxButtons>
+    </Screen>
   )
 };
 

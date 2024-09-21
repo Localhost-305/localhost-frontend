@@ -5,7 +5,7 @@ export const ScreenContainer = styled.header`
     padding: 20px;
     margin: 32px;
     margin-left: auto;
-    width: calc(100% - var(--menu-width, 368px));
+    width: 90%;
 
     @media (max-width: 1200px) {
         width: calc(100% - 282px);

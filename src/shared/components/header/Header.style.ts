@@ -3,7 +3,7 @@ import { LogoutOutlined } from "@ant-design/icons";
 
 export const HeaderContainer = styled.header`
     height: 72px;
-    width: calc(100% - 240px);
+    width: 100%;
     margin-left: auto;
     display: flex;
     align-items: center;
