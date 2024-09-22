@@ -1,8 +1,3 @@
-.custom_menu {
-  background-color: var(--light); /* Cor de fundo do menu */
-  width: 240px;
-}
-
 .custom_menu .ant-menu-item {
   color: var(--black) ; /* Cor do texto do item do menu */
 }

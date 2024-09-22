@@ -183,7 +183,7 @@ const DashboardScreen = () => {
   return(
     <Screen listBreadcrumb={listBreadcrumb}> 
         {isLoading && <DashboardScreen/>}
-        <RangePicker /> <SearchOutlined onClick={handleClick} />
+        <RangePicker style={{ border: '1px solid var(--orange)', }} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--orange)' }} />
         <div ref={chartRef} style={{ width: '100%', height: '300px' }} />
         <BoxButtons>
             <LimitedContainer width={240}></LimitedContainer>

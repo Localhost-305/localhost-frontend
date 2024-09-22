@@ -15,7 +15,7 @@ const Screen = ({children, listBreadcrumb}: ScreenProps) => {
         <>
             <Header />
             <ScreenContainer>
-                <Menu />
+                
                 { listBreadcrumb && (
                     <>
                         <Breadcrumb listBreadcrumb={listBreadcrumb}/>

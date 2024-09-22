@@ -1,5 +1,6 @@
 import { Typography , Menu as MenuAntd } from "antd";
 import styled from "styled-components";
+import { Menu as AntMenu } from 'antd';
 
 const { Text } = Typography;
 
@@ -19,37 +20,13 @@ export const ContainerMenu = styled.div`
     }
 `;
 
-export const ContainerLogoName = styled.div`
-    width: 100%;
-    height: 72px;
-    display: flex;
-    align-items: center;
-
-    -webkit-box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
-    -moz-box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
-    box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
-
-    @media (max-width: 768px) {
-        height: 60px;
-    }
-`;
-
-export const StyledMenu = styled(MenuAntd)`
-    background-color: var(--light);
-    border-right: none; /* Remover borda direita padrão do Ant Design */
+export const StyledMenu = styled(AntMenu)`
+    background-color: var(--orange);
+    color: var(--white);
+    border: none; 
 
     .ant-menu-item {
-        color: var(--black); /* Cor do texto do item */
-    }
-
-    .ant-menu-item:hover {
-        background-color: var(--orange); /* Cor de fundo no hover */
-        color: var(--white); /* Cor do texto no hover */
-    }
-
-    .ant-menu-item-selected {
-        background-color: var(--orange) !important; /* Cor de fundo do item selecionado */
-        color: var(--white); /* Cor do texto do item selecionado */
+        color: var(--white); 
     }
 
     @media (max-width: 768px) {
