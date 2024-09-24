@@ -13,6 +13,8 @@ import { DatePicker, Space } from 'antd';
 import type { DatePickerProps, GetProps } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { JobsType } from '../../../shared/types/JobsType';
+import { Table } from 'antd';
+import type { TableColumnsType, TableProps } from 'antd';
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
@@ -180,11 +182,69 @@ const DashboardScreen = () => {
     )
   }
 
+  const columns: TableColumnsType<DataType> = [
+    {
+      title: 'Vaga',
+      dataIndex: 'role',
+    },
+    {
+      title: 'Tempo Médio',
+      dataIndex: 'time',
+      sorter: {
+        compare: (a, b) => a.time - b.time,
+        multiple: 3,
+      },
+    },
+  ];
+
+  interface DataType {
+    key: React.Key;
+    role: string;
+    time: number;
+  }
+  
+  const data: DataType[] = [
+    {
+      key: '1',
+      role: 'Analista',
+      time: 91,
+    },
+    {
+      key: '2',
+      role: 'Desenvolvedor',
+      time: 95,
+    },
+    {
+      key: '3',
+      role: 'DevOps',
+      time: 98,
+    },
+    {
+      key: '4',
+      role: 'Designer',
+      time: 88,
+    },
+  ];
+
+  const onChange: TableProps<DataType>['onChange'] = (pagination, filters, sorter, extra) => {
+    console.log('params', pagination, filters, sorter, extra);
+  };
+
   return(
     <Screen listBreadcrumb={listBreadcrumb}> 
         {isLoading && <DashboardScreen/>}
-        <RangePicker style={{ border: '1px solid var(--orange)', }} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--orange)' }} />
-        <div ref={chartRef} style={{ width: '100%', height: '300px' }} />
+        <RangePicker style={{ border: '1px solid var(--orange)', color: 'var(--orange)'}} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--orange)' }} />
+        <div ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
+        <Table<DataType> columns={columns} dataSource={data} onChange={onChange} bordered style={{ width: '45%', height: '300px' }}
+        components={{
+          header: {
+            cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                    {props.children}
+                </th>
+            )
+        }        
+        }} />
         <BoxButtons>
             <LimitedContainer width={240}></LimitedContainer>
         </BoxButtons>
@@ -193,4 +253,3 @@ const DashboardScreen = () => {
 };
 
 export default DashboardScreen;
-
