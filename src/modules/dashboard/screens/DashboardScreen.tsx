@@ -9,12 +9,13 @@ import { LoginRoutesEnum } from "../../login/routes";
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-import { DatePicker, Space } from 'antd';
+import { DatePicker, Space, Card } from 'antd';
 import type { DatePickerProps, GetProps } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { JobsType } from '../../../shared/types/JobsType';
 import { Table } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
+import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
@@ -235,7 +236,8 @@ const DashboardScreen = () => {
         {isLoading && <DashboardScreen/>}
         <RangePicker style={{ border: '1px solid var(--orange)', color: 'var(--orange)'}} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--orange)' }} />
         <div ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
-        <Table<DataType> columns={columns} dataSource={data} onChange={onChange} bordered style={{ width: '45%', height: '300px' }}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '20px' }}>
+        <Table<DataType> columns={columns} dataSource={data} onChange={onChange} bordered style={{ width: '50%', height: '300px' }}
         components={{
           header: {
             cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
@@ -245,6 +247,15 @@ const DashboardScreen = () => {
             )
         }        
         }} />
+       <StyledCard 
+        bordered
+        >
+        <div className="card-bg"></div>
+        <h1 className="card-title">Tempo Médio | Total</h1>
+        <p className="card-date">Tempo Médio: <span>20</span></p>
+        <p className="card-date">Total: <span>30</span></p>
+        </StyledCard>
+        </div>
         <BoxButtons>
             <LimitedContainer width={240}></LimitedContainer>
         </BoxButtons>
