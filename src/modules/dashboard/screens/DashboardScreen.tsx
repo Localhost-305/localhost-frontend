@@ -133,7 +133,7 @@ const DashboardScreen = () => {
           barWidth: '60%',
           data: jobCandidates,
           itemStyle: {
-            color: '#fd7e14',
+            color: '#17A2B8',
             barBorderRadius: [8, 8, 0, 0]
           }
         }
@@ -234,14 +234,14 @@ const DashboardScreen = () => {
   return(
     <Screen listBreadcrumb={listBreadcrumb}> 
         {isLoading && <DashboardScreen/>}
-        <RangePicker style={{ border: '1px solid var(--orange)', color: 'var(--orange)'}} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--orange)' }} />
+        <RangePicker style={{ border: '1px solid var(--blue)'}} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--blue)' }} />
         <div ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '20px' }}>
         <Table<DataType> columns={columns} dataSource={data} onChange={onChange} bordered style={{ width: '50%', height: '300px' }}
         components={{
           header: {
             cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                <th {...props} style={{ backgroundColor: 'var(--blue)', color: 'var(--white)' }}>
                     {props.children}
                 </th>
             )
@@ -251,9 +251,8 @@ const DashboardScreen = () => {
         bordered
         >
         <div className="card-bg"></div>
-        <h1 className="card-title">Tempo Médio | Total</h1>
-        <p className="card-date">Tempo Médio: <span>20</span></p>
-        <p className="card-date">Total: <span>30</span></p>
+        <h1 className="card-title">Tempo Médio</h1>
+        <h2 className="card-date"><span> 20 Horas</span></h2>
         </StyledCard>
         </div>
         <BoxButtons>

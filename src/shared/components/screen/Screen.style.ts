@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const ScreenContainer = styled.header`
-    background-color: white;
+    background-color: var(--light);
     padding: 20px;
     margin: 32px;
     margin-left: auto;
