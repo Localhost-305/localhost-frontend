@@ -9,96 +9,95 @@ import { LoginRoutesEnum } from "../../login/routes";
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-import { DatePicker, Space, Card } from 'antd';
-import type { DatePickerProps, GetProps } from 'antd';
+import { Button, DatePicker } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { JobsType } from '../../../shared/types/JobsType';
 import { Table } from 'antd';
-import type { TableColumnsType, TableProps } from 'antd';
+import type { TableColumnsType } from 'antd';
+import { MethodsEnum } from '../../../shared/enums/methods.enum';
+import { useRequests } from '../../../shared/hooks/useRequests';
+import { URL_JOB } from '../../../shared/constants/urls';
+import FirstScreen from '../../firstScreen';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
-
+ 
 const DashboardScreen = () => {
   const navigate = useNavigate();
+  const { request } = useRequests();
   const [jobs, setJobs] = useState<JobsType[]>([]);
+  const [totalAverageTime, setTotalAverageTime] = useState<number>(0);
   const { isLoading, setLoading } = useLoading();
-
+  const { RangePicker } = DatePicker;
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+ 
   useEffect(() => {
     const token = getAuthorizationToken();
     if (!token) {
-        navigate(LoginRoutesEnum.LOGIN); 
+        navigate(LoginRoutesEnum.LOGIN);
     }
   }, [navigate]);
-
+ 
   const listBreadcrumb = [
     {
         name: 'Dashboard',
         navigateTo: DashboardRoutesEnum.DASHBOARD
     }
-]
+  ]
+ 
+  useEffect(() => {
+    setLoading(true);
+    request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs).finally(()=>setLoading(false))
+  },[])
+
+  const fetchJobs = (startDate?: string, endDate?: string) => {
+    setLoading(true);
+    let url = `${URL_JOB}/jobAverage`;
+    if (startDate && endDate) {
+      url += `?startDateStr=${startDate}&endDateStr=${endDate}`;
+    }
+
+    request(url, MethodsEnum.GET, setJobs).finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    setJobs([
-      {
-        "role": "Analista",    
-        "quantity": 25
-      },
-      {
-        "role": "Desenvolvedor",
-        "quantity": 30
-      },
-      {
-        "role": "DevOps",
-        "quantity": 15
-      },
-      {
-        "role": "Designer",
-        "quantity": 20
-      },
-      {
-        "role": "Suporte",
-        "quantity": 28
-      }
-    ]);
-    fetch('/jobs.json') 
-      .then(response => response.json())
-      .then(data => setJobs([
-        {
-          "role": "Analista",    
-          "quantity": 25
-        },
-        {
-          "role": "Desenvolvedor",
-          "quantity": 30
-        },
-        {
-          "role": "DevOps",
-          "quantity": 15
-        },
-        {
-          "role": "Designer",
-          "quantity": 20
-        },
-        {
-          "role": "Suporte",
-          "quantity": 28
-        }
-    ]))
-      .catch(error => console.error('Erro ao carregar o JSON:', error));
+    fetchJobs();
   }, []);
 
+  const handleDateChange = (dates: any, dateStrings: [string, string]) => {
+    if (dateStrings[0] && dateStrings[1]) {
+      setDateRange(dateStrings);
+    } else {
+      setDateRange(null);
+    }
+  };
+
+  const handleSearch = () => {
+    if (dateRange) {
+      const [startDate, endDate] = dateRange;
+      fetchJobs(startDate, endDate);
+    } else {
+      fetchJobs(); // Sem filtro, retorna todos
+    }
+  };
+
+  useEffect(() => {
+    // Calcula o total de tempos médios quando os dados de jobs são atualizados
+    const total = jobs.reduce((acc, job) => acc + Number(job.AverageTime), 0);
+    setTotalAverageTime(total);
+  }, [jobs]);
+   
 
 // GRÁFICO
   const chartRef = useRef<HTMLDivElement>(null);
-
+ 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
-
+ 
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
-
-    const jobNames = jobs.map((job: JobsType) => job.role);  
-    const jobCandidates = jobs.map((job: JobsType) => job.quantity);
-
+ 
+    const jobNames = jobs.map((job: JobsType) => job.JobTitle);  
+    const jobCandidates = jobs.map((job: JobsType) => job.AverageTime);
+ 
     const option: EChartOption = {
       tooltip: {
         trigger: 'axis',
@@ -133,126 +132,61 @@ const DashboardScreen = () => {
           barWidth: '60%',
           data: jobCandidates,
           itemStyle: {
-            color: '#17A2B8',
+            color: '#fd7e14',
             barBorderRadius: [8, 8, 0, 0]
           }
         }
       ]
     };
-
+ 
     myChart.setOption(option);
-
+ 
     return () => {
       myChart.dispose();
     };
   }, [jobs]);
-
-
-  type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
-
-  const { RangePicker } = DatePicker;
-
-  const onOk = (value: DatePickerProps['value'] | RangePickerProps['value']) => {
-  console.log('onOk: ', value);
-  };
-
-  const handleClick = () => {
-    setJobs(
-      [
-        {
-          "role": "Analista",    
-          "quantity": 10
-        },
-        {
-          "role": "Desenvolvedor",
-          "quantity": 9
-        },
-        {
-          "role": "DevOps",
-          "quantity": 30
-        },
-        {
-          "role": "Designer",
-          "quantity": 40
-        },
-        {
-          "role": "Suporte",
-          "quantity": 18
-        }
-    ]
-    )
-  }
-
-  const columns: TableColumnsType<DataType> = [
+ 
+  const columns: TableColumnsType<JobsType> = [
     {
       title: 'Vaga',
-      dataIndex: 'role',
+      dataIndex: 'JobTitle',
     },
     {
       title: 'Tempo Médio',
-      dataIndex: 'time',
+      dataIndex: 'AverageTime',
       sorter: {
-        compare: (a, b) => a.time - b.time,
+        compare: (a, b) => a.AverageTime - b.AverageTime,
         multiple: 3,
       },
     },
   ];
-
-  interface DataType {
-    key: React.Key;
-    role: string;
-    time: number;
-  }
-  
-  const data: DataType[] = [
-    {
-      key: '1',
-      role: 'Analista',
-      time: 91,
-    },
-    {
-      key: '2',
-      role: 'Desenvolvedor',
-      time: 95,
-    },
-    {
-      key: '3',
-      role: 'DevOps',
-      time: 98,
-    },
-    {
-      key: '4',
-      role: 'Designer',
-      time: 88,
-    },
-  ];
-
-  const onChange: TableProps<DataType>['onChange'] = (pagination, filters, sorter, extra) => {
-    console.log('params', pagination, filters, sorter, extra);
-  };
-
+ 
+ 
   return(
-    <Screen listBreadcrumb={listBreadcrumb}> 
-        {isLoading && <DashboardScreen/>}
-        <RangePicker style={{ border: '1px solid var(--blue)'}} /> <SearchOutlined onClick={handleClick} style={{ color: 'var(--blue)' }} />
+    <Screen listBreadcrumb={listBreadcrumb}>
+        {isLoading && <FirstScreen/>}
+        <RangePicker onChange={handleDateChange} style={{ border: '1px solid var(--orange)'}} />
+        <Button icon={<SearchOutlined style={{ color: 'var(--orange)' }} />} onClick={handleSearch} />
         <div ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: '20px' }}>
-        <Table<DataType> columns={columns} dataSource={data} onChange={onChange} bordered style={{ width: '50%', height: '300px' }}
-        components={{
-          header: {
-            cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                <th {...props} style={{ backgroundColor: 'var(--blue)', color: 'var(--white)' }}>
-                    {props.children}
-                </th>
-            )
-        }        
-        }} />
-       <StyledCard 
+        <Table columns={columns}
+          dataSource={jobs}
+          bordered style={{ width: '45%', height: '300px' }}
+          components={{
+            header: {
+              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                  <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                      {props.children}
+                  </th>
+              )
+            }        
+          }} />
+        <StyledCard 
         bordered
         >
         <div className="card-bg"></div>
         <h1 className="card-title">Tempo Médio</h1>
-        <h2 className="card-date"><span> 20 Horas</span></h2>
+        <h2 className="card-date"><span>{totalAverageTime} Horas</span></h2>
         </StyledCard>
         </div>
         <BoxButtons>
@@ -261,5 +195,5 @@ const DashboardScreen = () => {
     </Screen>
   )
 };
-
+ 
 export default DashboardScreen;

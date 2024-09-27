@@ -1,4 +1,4 @@
 export interface JobsType{
-    role: string;
-    quantity: number;
+    JobTitle: string;
+    AverageTime: number;
 }
