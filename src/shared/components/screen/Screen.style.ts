@@ -6,6 +6,8 @@ export const ScreenContainer = styled.header`
     margin: 32px;
     margin-left: auto;
     width: 90%;
+    min-height: 100vh; 
+    overflow: auto;
 
     @media (max-width: 1200px) {
         width: calc(100% - 282px);

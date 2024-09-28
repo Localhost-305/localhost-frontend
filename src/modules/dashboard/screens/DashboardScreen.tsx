@@ -12,11 +12,13 @@ import { useLoading } from "../../../shared/components/loadingProvider/LoadingPr
 import { Button, DatePicker } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { JobsType } from '../../../shared/types/JobsType';
+import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { Table } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_JOB } from '../../../shared/constants/urls';
+import { URL_CANDIDATES } from '../../../shared/constants/urls';
 import FirstScreen from '../../firstScreen';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
  
@@ -24,7 +26,8 @@ const DashboardScreen = () => {
   const navigate = useNavigate();
   const { request } = useRequests();
   const [jobs, setJobs] = useState<JobsType[]>([]);
-  const [totalAverageTime, setTotalAverageTime] = useState<number>(0);
+  const [candidates, setCandidates] = useState<CandidatesType[]>([]);
+  const [totalAverageTime, setTotalAverageTime] = useState<number>(0);  
   const { isLoading, setLoading } = useLoading();
   const { RangePicker } = DatePicker;
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
@@ -42,15 +45,21 @@ const DashboardScreen = () => {
         navigateTo: DashboardRoutesEnum.DASHBOARD
     }
   ]
+
+  useEffect(() => {
+    setLoading(true);
+    request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates).finally(()=>setLoading(false))
+  },[])
  
   useEffect(() => {
     setLoading(true);
     request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs).finally(()=>setLoading(false))
   },[])
 
+  //alterar
   const fetchJobs = (startDate?: string, endDate?: string) => {
     setLoading(true);
-    let url = `${URL_JOB}/jobAverage`;
+    let url = (URL_APPLICATIONS);
     if (startDate && endDate) {
       url += `?startDateStr=${startDate}&endDateStr=${endDate}`;
     }
@@ -95,14 +104,14 @@ const DashboardScreen = () => {
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
  
-    const jobNames = jobs.map((job: JobsType) => job.JobTitle);  
-    const jobCandidates = jobs.map((job: JobsType) => job.AverageTime);
+    const jobNames = candidates.map((job: CandidatesType) => job.jobTitle);  
+    const candidateCount = candidates.map((job: CandidatesType) => job.count);
  
     const option: EChartOption = {
       tooltip: {
         trigger: 'axis',
         axisPointer: {
-          type: 'shadow'
+          type: 'shadow',
         }
       },
       grid: {
@@ -117,7 +126,10 @@ const DashboardScreen = () => {
           data: jobNames,
           axisTick: {
             alignWithLabel: true
-          }
+          },
+          axisLabel: {
+            show: false, 
+          },
         }
       ],
       yAxis: [
@@ -130,7 +142,7 @@ const DashboardScreen = () => {
           name: 'Candidatos',
           type: 'bar',
           barWidth: '60%',
-          data: jobCandidates,
+          data: candidateCount,
           itemStyle: {
             color: '#fd7e14',
             barBorderRadius: [8, 8, 0, 0]
@@ -172,6 +184,7 @@ const DashboardScreen = () => {
         <Table columns={columns}
           dataSource={jobs}
           bordered style={{ width: '45%', height: '300px' }}
+          pagination={{ pageSize: 5 }}
           components={{
             header: {
               cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
