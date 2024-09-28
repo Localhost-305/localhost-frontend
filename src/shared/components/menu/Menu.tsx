@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
-import { AppstoreOutlined, HomeOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 import type { MenuProps } from 'antd';
+
 import { StyledMenu } from './menu.style';
 
 const Menu = () => {
-const [current, setCurrent] = useState('Home');
-const items: MenuProps['items'] = [
-  {
-    label: 'Home',
-    key: 'Home',
-  },
-  {
-    label: 'Dashboard',
-    key: 'Dashboard',
-  },
+  const [current, setCurrent] = useState('Home');
+  const items: MenuProps['items'] = [
+    {
+      label: 'Dashboard',
+      key: 'Dashboard',
+    },
   ];
 
   const onClick: MenuProps['onClick'] = (e) => {
@@ -23,11 +19,11 @@ const items: MenuProps['items'] = [
 
   return (
     <StyledMenu
-      onClick={onClick} 
-      selectedKeys={[current]} 
-      mode="horizontal" 
+      onClick={onClick}
+      selectedKeys={[current]}
+      mode="horizontal"
       items={items as MenuProps['items']}
-      />
+    />
   );
 
 };

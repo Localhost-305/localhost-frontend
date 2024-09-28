@@ -1,23 +1,13 @@
 import styled from "styled-components";
 
-export const ScreenContainer = styled.header`
+export const ScreenContainer = styled.div`
     background-color: var(--light);
     padding: 20px;
-    margin: 32px;
-    margin-left: auto;
-    width: 90%;
-    min-height: 100vh; 
+    margin: 20px auto;
+    max-width: 1800px;
+    min-height: calc(100vh - 112px);
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px;
     overflow: auto;
-
-    @media (max-width: 1200px) {
-        width: calc(100% - 282px);
-        margin: 0px;
-        margin-left: 240px;
-    }
-
-    @media (max-width: 768px) {
-        width: calc(100% - 142px);
-        margin: 0px;
-        margin-left: 100px;
-    }
+    box-sizing: border-box;
 `;

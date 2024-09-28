@@ -56,18 +56,18 @@ const Header = () => {
             </Modal>
 
             <HeaderContainer>
-            <ContainerLogoName>
-            <img src="logo-sem-fundo.png" alt="Logo" style={{ height: '70px',  marginLeft: '10px', marginRight: '10px' }} />
-            <MenuContainer style={{ width: '100%' }}>
-                <Menu />
-            </MenuContainer>
-            </ContainerLogoName>
+                <ContainerLogoName>
+                    <img src="logo-sem-fundo.png" alt="Logo" style={{ height: '70px',  marginLeft: '10px', marginRight: '10px' }} />
+                    <MenuContainer style={{ width: '100%' }}>
+                        <Menu />
+                    </MenuContainer>
+                </ContainerLogoName>
                 <Dropdown menu={{ items }}>
                     <Button type="link" 
                     style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
-                        margin: '0px 15px 0px 0px', 
+                        margin: '0px 30px 0px 0px', 
                         height: '45px', 
                         backgroundColor: 'var(--orange)',
                         color: 'var(--white)',

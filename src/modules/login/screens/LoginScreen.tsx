@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
  
 import '../styles/LoginScreen.module.css';
-import background from '../../../../public/logo loga l.jpg';
+import background from '../../../../public/logo local.svg';
 import FirstScreen from '../../firstScreen';
 import Button from '../../../shared/components/buttons/button/Button';
 import styles from '../styles/LoginScreen.module.css';
-import Logo from '../../../../public/logo loga l.jpg';
+import Logo from '../../../../public/logo-sem-fundo.png';
 import InputPassword from '../../../shared/components/inputs/inputPasswordAntd/InputPassword';
 import InputAD from '../../../shared/components/inputs/inputAntd/InputAD';
 import { useRequests } from '../../../shared/hooks/useRequests';

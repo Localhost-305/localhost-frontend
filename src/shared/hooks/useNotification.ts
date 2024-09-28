@@ -7,7 +7,6 @@ export const useNotification = () => {
     const { notification } = useGlobalReducer();
 
     useEffect(() => {
-
         if(notification?.message && notification?.type){
             api[notification?.type]({
                 message: `${notification?.message}`,
