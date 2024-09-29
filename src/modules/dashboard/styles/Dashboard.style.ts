@@ -8,7 +8,7 @@ export const StyledCard = styled(Card)`
   color: var(--black);
   border-radius: 28px;
   transition: transform 0.5s ease;
-  border: 1px solid var(--orange);
+  border: 1px solid var(--yellow);
   width: 360px; 
   height: 200px; 
 
@@ -30,9 +30,9 @@ export const StyledCard = styled(Card)`
     right: -75px;
     width: 128px;
     height: 128px;
-    background-color: var(--orange);
+    background-color: var(--yellow);
     border-radius: 50%;
-    border-color: var(--orange);
+    border-color: var(--yellow);
     transition: all 0.5s ease;
     z-index: 0; 
   }
