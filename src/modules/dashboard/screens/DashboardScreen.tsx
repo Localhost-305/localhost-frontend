@@ -153,8 +153,9 @@ const DashboardScreen = () => {
         `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setJobsAverageAll);
-      console.log(startDateStr.format('YYYY-MM-DD'));
-      console.log(endDateStr.format('YYYY-MM-DD'));
+      request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
+        MethodsEnum.GET, 
+        setCandidates);
     }else{
       try{
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
