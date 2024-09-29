@@ -1,5 +1,6 @@
-import { Typography } from "antd";
+import { Typography , Menu as MenuAntd } from "antd";
 import styled from "styled-components";
+import { Menu as AntMenu } from 'antd';
 
 const { Text } = Typography;
 
@@ -9,7 +10,7 @@ export const ContainerMenu = styled.div`
     top: 0;
     bottom: 0;
     width: 240px;
-    background-color: var(--beige);
+    background-color: var(--gray-dark);
     -webkit-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     -moz-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
@@ -19,18 +20,19 @@ export const ContainerMenu = styled.div`
     }
 `;
 
-export const ContainerLogoName = styled.div`
-    width: 100%;
-    height: 72px;
-    display: flex;
-    align-items: center;
+export const StyledMenu = styled(AntMenu)`
+    background-color: var(--gray-dark);
+    color: var(--white);
+    border: none; 
 
-    -webkit-box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
-    -moz-box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
-    box-shadow: -2px 6px 4px 0px rgba(0,0,0,0.47);
+    .ant-menu-item {
+        color: var(--white); 
+    }
 
     @media (max-width: 768px) {
-        height: 60px;
+        .ant-menu-item {
+            font-size: 12px; /* Ajustar o tamanho do texto para telas menores */
+        }
     }
 `;
 

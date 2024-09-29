@@ -3,9 +3,9 @@ import { DownOutlined, UserOutlined} from '@ant-design/icons';
 import { Dropdown, Modal, Avatar, Button } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
-
+import Menu  from "../menu/Menu"
 import { logout } from "../../functions/connection/auth";
-import { HeaderContainer } from "./Header.style";
+import { HeaderContainer, MenuContainer, ContainerLogoName } from "./Header.style"
 import { getItemStorage } from "../../functions/connection/storageProxy";
 import { NAME } from "../../constants/authorizationConstants";
 
@@ -56,15 +56,21 @@ const Header = () => {
             </Modal>
 
             <HeaderContainer>
+                <ContainerLogoName>
+                    <img src="logo-sem-fundo.png" alt="Logo" style={{ height: '70px',  marginLeft: '10px', marginRight: '10px' }} />
+                    <MenuContainer style={{ width: '100%' }}>
+                        <Menu />
+                    </MenuContainer>
+                </ContainerLogoName>
                 <Dropdown menu={{ items }}>
                     <Button type="link" 
                     style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
-                        margin: '0px 15px 0px 0px', 
+                        margin: '0px 30px 0px 0px', 
                         height: '45px', 
-                        backgroundColor: '#82B04D',
-                        color: 'black',
+                        backgroundColor: 'var(--orange)',
+                        color: 'var(--white)',
                         fontWeight: 500
                     }}>
                         <Avatar

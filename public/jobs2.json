@@ -1,0 +1,22 @@
+ [
+    {
+      "job_title": "Analista",    
+      "candidates": 25
+    },
+    {
+      "job_title": "Desenvolvedor",
+      "candidates": 30
+    },
+    {
+      "job_title": "DevOps",
+      "candidates": 15
+    },
+    {
+      "job_title": "Designer",
+      "candidates": 20
+    },
+    {
+      "job_title": "Suporte",
+      "candidates": 28
+    }
+]

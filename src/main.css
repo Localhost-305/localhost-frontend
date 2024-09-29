@@ -1,9 +1,27 @@
 :root {
-    --blue: #1EA6DF;
+    --orange: #F18524;
+    --blue: #007BFF;
+    --indigo: #6610F2;
+    --purple: #6F42C1;
+    --pink: #E83E8C;
+    --red: #DC3545;
+    --yellow: #FFC107;
     --beige: #F4F1E9;
-    --green: #82B04D;
+    --green: #28A745;
+    --teal: #20C997;
+    --cyan: #17A2B8;
+    --white: #FFF;
+    --gray: #6C757D;
+    --gray-dark: #343A40;
     --black: #000000;
-    --gray: #4D4D4D;
+    --primary: #007BFF;
+    --secondary: #6C757D;
+    --sucess: #28A745;
+    --info: #17A2B8;
+    --warning: #FFC107;
+    --danger: #DC3545;
+    --light: #F8F9FA;
+    --dark: #343A40;
 }
 
 @font-face {

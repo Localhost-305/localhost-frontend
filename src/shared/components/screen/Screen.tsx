@@ -1,7 +1,7 @@
 import { Divider } from 'antd';
-import Breadcrumb, { ListBreadcrumb } from '../breadcrumb/Breadcrumb';
-import Menu from '../menu/Menu';
+
 import Header from '../header/Header';
+import Breadcrumb, { ListBreadcrumb } from '../breadcrumb/Breadcrumb';
 import { ScreenContainer } from './Screen.style';
 
 interface ScreenProps {
@@ -15,7 +15,7 @@ const Screen = ({children, listBreadcrumb}: ScreenProps) => {
         <>
             <Header />
             <ScreenContainer>
-                <Menu />
+                
                 { listBreadcrumb && (
                     <>
                         <Breadcrumb listBreadcrumb={listBreadcrumb}/>

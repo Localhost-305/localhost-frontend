@@ -9,6 +9,7 @@ import { AuthType } from "../types/AuthType";
 import { useGlobalReducer } from "../../store/reducers/globalReducer/useGlobalReducer";
 import { NotificationEnum } from "../types/NotificationType";
 import { UserRoutesEnum } from "../../modules/user/routes";
+import axios from "axios";
 
 
 export const useRequests = () => {
@@ -35,11 +36,11 @@ export const useRequests = () => {
     }
 
     const authRequest = async (body: unknown, navigate: ReturnType<typeof useNavigate>): Promise<void>  => {
-        await connectionAPIPost<AuthType>(URL_AUTH, body)
-        .then((data) => {
-            setUser(data.user);
-            setAuthorizationToken(data.tokenJWT);
-            setUserData(data.user.name);
+        await axios.post(URL_AUTH, body)
+        .then((info:any) => {
+            setUser(info.data.user);
+            setAuthorizationToken(info.data.tokenJWT);
+            setUserData(info.data.user.name);
             navigate(UserRoutesEnum.USER);
         }).catch((error: Error) => {
             console.log(error.message);

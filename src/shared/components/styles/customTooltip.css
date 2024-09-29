@@ -1,0 +1,11 @@
+.custom-tooltip .ant-tooltip-inner {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    background-color: black;
+    border-radius: 4px;
+}
+  
+.custom-tooltip .ant-tooltip-arrow {
+    background-color: #f0f0f0;
+}

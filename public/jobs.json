@@ -1,0 +1,64 @@
+{
+  "jobs": [
+    {
+      "job_id": 1,
+      "job_title": "Analista",
+      "number_of_positions": 3,
+      "job_requirements": "Knowledge in data analysis.",
+      "job_status": "Open",
+      "location": "São Paulo",
+      "responsible_person": "Maria Silva",
+      "opening_date": "2024-09-01T00:00:00Z",
+      "closing_date": "2024-09-30T00:00:00Z",
+      "candidates": 25
+    },
+    {
+      "job_id": 2,
+      "job_title": "Desenvolvedor",
+      "number_of_positions": 2,
+      "job_requirements": "Experience in React and Node.js.",
+      "job_status": "Open",
+      "location": "Rio de Janeiro",
+      "responsible_person": "João Pereira",
+      "opening_date": "2024-09-05T00:00:00Z",
+      "closing_date": "2024-10-05T00:00:00Z",
+      "candidates": 30
+    },
+    {
+      "job_id": 3,
+      "job_title": "DevOps",
+      "number_of_positions": 1,
+      "job_requirements": "Knowledge in CI/CD and Kubernetes.",
+      "job_status": "Closed",
+      "location": "Belo Horizonte",
+      "responsible_person": "Ana Lima",
+      "opening_date": "2024-08-15T00:00:00Z",
+      "closing_date": "2024-09-15T00:00:00Z",
+      "candidates": 15
+    },
+    {
+      "job_id": 4,
+      "job_title": "Designer",
+      "number_of_positions": 2,
+      "job_requirements": "Creativity and portfolio.",
+      "job_status": "Open",
+      "location": "Curitiba",
+      "responsible_person": "Pedro Santos",
+      "opening_date": "2024-09-10T00:00:00Z",
+      "closing_date": "2024-10-10T00:00:00Z",
+      "candidates": 20
+    },
+    {
+      "job_id": 5,
+      "job_title": "Suporte",
+      "number_of_positions": 5,
+      "job_requirements": "Good communication and empathy.",
+      "job_status": "Open",
+      "location": "Porto Alegre",
+      "responsible_person": "Lucas Almeida",
+      "opening_date": "2024-09-12T00:00:00Z",
+      "closing_date": "2024-10-12T00:00:00Z",
+      "candidates": 28
+    }
+  ]
+}
