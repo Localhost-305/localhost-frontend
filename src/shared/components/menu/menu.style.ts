@@ -10,7 +10,7 @@ export const ContainerMenu = styled.div`
     top: 0;
     bottom: 0;
     width: 240px;
-    background-color: var(--orange);
+    background-color: var(--gray-dark);
     -webkit-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     -moz-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
     box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
@@ -21,7 +21,7 @@ export const ContainerMenu = styled.div`
 `;
 
 export const StyledMenu = styled(AntMenu)`
-    background-color: var(--orange);
+    background-color: var(--gray-dark);
     color: var(--white);
     border: none; 
 

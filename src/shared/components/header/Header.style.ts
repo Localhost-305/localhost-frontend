@@ -10,14 +10,14 @@ export const HeaderContainer = styled.header`
     align-items: center;
     justify-content: space-between;
     padding-right: 16px;
-    background-color: var(--orange);
+    background-color: var(--gray-dark);
     -webkit-box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);
     -moz-box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);
     box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.47);
 `;
 
 export const MenuContainer = styled.div`
-  background-color: var(--orange);
+  background-color: var(--gray-dark);
 `;
 
 export const ContainerLogoName = styled.div`

@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal } from 'antd';
-import { QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import * as XLSX from "xlsx";
+import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
 import Screen from "../../../shared/components/screen/Screen";
@@ -21,6 +23,9 @@ import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGloba
 import { NotificationEnum } from '../../../shared/types/NotificationType';
 import { ContainerRowResponsive } from '../../../shared/components/styles/containerRowResponsive.style';
 import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
+import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
+import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
+import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
 
 
 const DashboardScreen = () => {
@@ -33,6 +38,7 @@ const DashboardScreen = () => {
   const { RangePicker } = DatePicker;
   const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
   const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
+  const [ fileList, setFileList ] = useState<any[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -56,8 +62,6 @@ const DashboardScreen = () => {
     }
   }, [])
 
-
-  // ECHARTS
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -106,7 +110,7 @@ const DashboardScreen = () => {
           barWidth: '60%',
           data: candidateCount,
           itemStyle: {
-            color: '#fd7e14',
+            color: '#007BFF',
             barBorderRadius: [8, 8, 0, 0]
           }
         }
@@ -171,7 +175,6 @@ const DashboardScreen = () => {
         setLoading(false);
       }
     }
-   
   }
 
   // MODAL DOUBTS
@@ -185,14 +188,67 @@ const DashboardScreen = () => {
       setIsModalDoubtsOpen(true);
   }
 
+  // EXCEL
+  const handleBeforeUpload = (file: File) => {
+    const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
+  
+    return isExcel || Upload.LIST_IGNORE;
+  };
+
+  const handleUpload = async () => {
+    if (fileList.length === 0) {
+      setNotification("Por favor, envie um arquivo primeiro!", NotificationEnum.ERROR);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileList[0]);
+
+    try {
+      const response = await axios.post("http://localhost:9090/excel/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
+        },
+      });
+      setNotification("Arquivo enviado com sucesso!", NotificationEnum.SUCCESS);
+    } catch (error) {
+      setNotification("Erro ao enviar o arquivo!", NotificationEnum.ERROR);
+      console.error("Upload Error:", error);
+    }
+  };
+
+  const onChange = (info: any) => {
+    setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
+  };
+
+
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
       {isLoading && <FirstScreen />}
 
       <h1>Dashboard dos Dados de Contratação</h1>
-      <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--orange)', marginBottom: '1em'}} />
-      <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--orange)'}} /> } 
-        onClick={handleSearch} />
+      <BoxButtons>
+        <div>
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
+          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
+            onClick={handleSearch} />
+        </div>
+        <div>
+          <Upload
+            accept=".xlsx"
+            beforeUpload={handleBeforeUpload}
+            fileList={fileList}
+            onChange={onChange}
+            maxCount={1}>
+            <Button icon={<UploadOutlined />}>Selecionar Arquivo Excel</Button>
+          </Upload>
+          <Button type="primary" onClick={handleUpload} style={{ marginTop: 16 }}>
+            Enviar Arquivo
+          </Button>
+        </div>
+      </BoxButtons>
 
       <ContainerRowResponsive maxWidth={'800px'}>
         <Table columns={columns}
