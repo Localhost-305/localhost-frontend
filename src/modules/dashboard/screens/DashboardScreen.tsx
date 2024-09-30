@@ -3,7 +3,6 @@ import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
 import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
-import * as XLSX from "xlsx";
 import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
@@ -203,7 +202,7 @@ const DashboardScreen = () => {
     }
 
     const formData = new FormData();
-    formData.append("file", fileList[0]);
+    formData.append("file", fileList[0].originFileObj);
 
     try {
       const response = await axios.post("http://localhost:9090/excel/upload", formData, {
