@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
 import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Radio, Select, Space } from 'antd';
+import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
@@ -195,6 +197,19 @@ const DashboardScreen = () => {
     return isExcel || Upload.LIST_IGNORE;
   };
 
+  const options: SelectProps['options'] = [];
+
+  for (let i = 10; i < 36; i++) {
+    options.push({
+      value: i.toString(36) + i,
+      label: i.toString(36) + i,
+    });
+  }
+  
+  const handleChange = (value: string | string[]) => {
+    console.log(`Selected: ${value}`);
+  };
+
   const handleUpload = async () => {
     if (fileList.length === 0) {
       setNotification("Por favor, envie um arquivo primeiro!", NotificationEnum.ERROR);
@@ -229,6 +244,14 @@ const DashboardScreen = () => {
 
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
+        <div>
+          <Select
+            defaultValue="a1"
+            onChange={handleChange}
+            style={{ width: 200 }}
+            options={options}
+        />
+        </div>
         <div>
           <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
