@@ -277,6 +277,10 @@ const DashboardScreen = () => {
           <h1 className="card-title">Tempo Médio</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
+        <StyledCard bordered>
+          <h1 className="card-title">Retenção Média</h1>
+          <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} dias</span></h2>
+        </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{marginBottom: '15em'}}
               onClick={() => 
