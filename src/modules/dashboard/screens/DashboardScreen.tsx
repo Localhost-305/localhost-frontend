@@ -25,7 +25,9 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
-
+// Importa o tipo MonthlyCostType que define a estrutura dos dados de custo mensal recebidos da API
+// O código traz a interface HiringCostType de um arquivo específico para que você possa usá-la no seu arquivo atual.
+import { HiringCostType } from '../../../shared/types/HiringCostType';
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -38,6 +40,7 @@ const DashboardScreen = () => {
   const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
   const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
   const [ fileList, setFileList ] = useState<any[]>([]);
+  const [ monthlyCosts, setMonthlyCosts ] = useState<HiringCostType[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -54,6 +57,9 @@ const DashboardScreen = () => {
       request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
+      // adiciona a requisição para os custos mensais
+      // O código faz um pedido para buscar os custos mensais de contratações e, quando receber os dados, usa a função setMonthlyCosts para processá-los
+      request(`${URL_JOB}/hirings/cost`, MethodsEnum.GET, setMonthlyCosts);
     }catch(error){
       setNotification(String(error), NotificationEnum.ERROR);
     }finally{
@@ -71,6 +77,12 @@ const DashboardScreen = () => {
 
     const jobNames = candidates.map((job: CandidatesType) => job.jobTitle);
     const candidateCount = candidates.map((job: CandidatesType) => job.count);
+
+    /*código cria duas novas listas:
+        months: uma lista contendo apenas os meses dos custos mensais.
+        totalCosts: uma lista contendo apenas os custos totais correspondentes a cada mês.*/
+    const months = monthlyCosts.map((cost) => cost.month);
+    const totalCosts = monthlyCosts.map((cost) => cost.totalCost);
 
     const option: EChartOption = {
       tooltip: {
