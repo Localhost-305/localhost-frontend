@@ -16,7 +16,7 @@ import { JobsType } from '../../../shared/types/JobsType';
 import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -59,7 +59,7 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       // adiciona a requisição para os custos mensais
       // O código faz um pedido para buscar os custos mensais de contratações e, quando receber os dados, usa a função setMonthlyCosts para processá-los
-      request(`${URL_JOB}/hirings/cost`, MethodsEnum.GET, setMonthlyCosts);
+      // request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
     }catch(error){
       setNotification(String(error), NotificationEnum.ERROR);
     }finally{
@@ -68,6 +68,7 @@ const DashboardScreen = () => {
   }, [])
 
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartRefCosts = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
@@ -77,12 +78,6 @@ const DashboardScreen = () => {
 
     const jobNames = candidates.map((job: CandidatesType) => job.jobTitle);
     const candidateCount = candidates.map((job: CandidatesType) => job.count);
-
-    /*código cria duas novas listas:
-        months: uma lista contendo apenas os meses dos custos mensais.
-        totalCosts: uma lista contendo apenas os custos totais correspondentes a cada mês.*/
-    const months = monthlyCosts.map((cost) => cost.month);
-    const totalCosts = monthlyCosts.map((cost) => cost.totalCost);
 
     const option: EChartOption = {
       tooltip: {
@@ -135,6 +130,86 @@ const DashboardScreen = () => {
     };
   }, [jobs]);
 
+  useEffect(() => {
+    // if (!chartRefCosts.current || monthlyCosts.length === 0) return; 
+
+    const chartDom = chartRefCosts.current;
+    const myChart = echarts.init(chartDom);
+
+    const months = monthlyCosts.map((hiring: HiringCostType) => hiring.month);
+    const totalCosts = monthlyCosts.map((hiring: HiringCostType) => hiring.totalCost);
+
+    const option: EChartOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow',
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: [
+        {
+          type: 'category',
+          data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          axisTick: {
+            alignWithLabel: true
+          }
+        }
+      ],
+      yAxis: [
+        {
+          type: 'value'
+        }
+      ],
+      series: [
+        {
+          name: 'Custo Total',
+          type: 'bar',
+          barWidth: '60%',
+          data: [
+            2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3
+          ],
+          markPoint: {
+            data: [
+              { type: 'max', name: 'Max' },
+              { type: 'min', name: 'Min' }
+            ]
+          },
+          markLine: {
+        data: [{ type: 'average', name: 'Avg' }]
+      }
+    },
+    {
+      name: 'Evaporation',
+      type: 'bar',
+      data: [
+        2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3
+      ],
+      markPoint: {
+        data: [
+          { name: 'Max', value: 182.2, coord: [7, 183] },
+          { name: 'Min', value: 2.3, coord: [11, 3] }
+        ]
+      },
+      markLine: {
+        data: [{ type: 'average', name: 'Avg' }]
+      }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+
+    return () => {
+      myChart.dispose();
+    };
+  }, [monthlyCosts]);
+
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -168,18 +243,22 @@ const DashboardScreen = () => {
         `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setJobsAverageAll);
-        request(
+      request(
           `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
           MethodsEnum.GET, 
           setJobs);
       request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setCandidates);
+      // request(`${URL_HIRING}/cost?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+      //   MethodsEnum.GET,
+      //   setMonthlyCosts); // Requisição atualizada para buscar custos mensais no intervalo de datas
     }else{
       try{
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
+        // request(`${URL_HIRING}/cost`,MethodsEnum.GET, setMonthlyCosts);
       }catch(error){
         setNotification(String(error), NotificationEnum.ERROR);
       }finally{
@@ -301,6 +380,11 @@ const DashboardScreen = () => {
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
+      
+        {/* Novo gráfico de custos mensais */}
+        <h2>Custos Mensais de Contratação</h2>
+        <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses</small>
+        <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
       </LimitedContainer>
 
       <Modal title={titleDoubt} 
