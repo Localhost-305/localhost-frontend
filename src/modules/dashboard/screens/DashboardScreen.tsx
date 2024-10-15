@@ -53,7 +53,7 @@ const DashboardScreen = () => {
     setLoading(true);
     try{
       request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
-      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates);
+      // request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates); sera inserido o request média
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
     }catch(error){
@@ -168,6 +168,7 @@ const DashboardScreen = () => {
     }else{
       try{
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+        // request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates); sera inserido o request média
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       }catch(error){
@@ -279,6 +280,7 @@ const DashboardScreen = () => {
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
         <StyledCard bordered>
+          <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} dias</span></h2>
         </StyledCard>
