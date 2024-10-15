@@ -53,6 +53,7 @@ const DashboardScreen = () => {
     setLoading(true);
     try{
       request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
     }catch(error){
