@@ -53,7 +53,7 @@ const DashboardScreen = () => {
   useEffect(() => {
     setLoading(true);
     try{
-      request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+      request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
     }catch(error){
@@ -67,12 +67,12 @@ const DashboardScreen = () => {
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
-
-    const chartDom = chartRef.current;
+    if(candidates.length > 0){
+      const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
 
-    const jobNames = candidates.map((job: CandidatesType) => job.jobTitle);
-    const candidateCount = candidates.map((job: CandidatesType) => job.count);
+    const jobNames = candidates.map((job: CandidatesType) => {return job.jobTitle });
+    const candidateCount = candidates.map((job: CandidatesType) => {return job.count});
 
     const option: EChartOption = {
       tooltip: {
@@ -123,6 +123,9 @@ const DashboardScreen = () => {
     return () => {
       myChart.dispose();
     };
+
+    }
+    
   }, [jobs]);
 
   // TABLES
@@ -310,7 +313,7 @@ const DashboardScreen = () => {
 
       <LimitedContainer width={800}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
-        <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
+        <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small> 
         <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
       </LimitedContainer>
 
