@@ -59,7 +59,7 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       // adiciona a requisição para os custos mensais
       // O código faz um pedido para buscar os custos mensais de contratações e, quando receber os dados, usa a função setMonthlyCosts para processá-los
-      // request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
+      request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
     }catch(error){
       setNotification(String(error), NotificationEnum.ERROR);
     }finally{
@@ -130,15 +130,26 @@ const DashboardScreen = () => {
     };
   }, [jobs]);
 
+  //custo
   useEffect(() => {
     // if (!chartRefCosts.current || monthlyCosts.length === 0) return; 
 
+    console.log(monthlyCosts)
     const chartDom = chartRefCosts.current;
     const myChart = echarts.init(chartDom);
 
-    const months = monthlyCosts.map((hiring: HiringCostType) => hiring.month);
-    const totalCosts = monthlyCosts.map((hiring: HiringCostType) => hiring.totalCost);
-
+    let orderedMonths: number[] = [];
+    let variableMonth: number = 1;
+ 
+    let i: number = 1;
+    while(i < monthlyCosts.length){
+      if
+      
+    }
+    
+    const totalCosts = monthlyCosts.map((hiring: HiringCostType) => hiring.somaDoCusto);
+    
+    // ordenar do menor para o maior as duas variaveis
     const option: EChartOption = {
       tooltip: {
         trigger: 'axis',
@@ -155,7 +166,7 @@ const DashboardScreen = () => {
       xAxis: [
         {
           type: 'category',
-          data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          data: months,
           axisTick: {
             alignWithLabel: true
           }
@@ -171,9 +182,7 @@ const DashboardScreen = () => {
           name: 'Custo Total',
           type: 'bar',
           barWidth: '60%',
-          data: [
-            2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3
-          ],
+          data: totalCosts,
           markPoint: {
             data: [
               { type: 'max', name: 'Max' },
@@ -183,23 +192,7 @@ const DashboardScreen = () => {
           markLine: {
         data: [{ type: 'average', name: 'Avg' }]
       }
-    },
-    {
-      name: 'Evaporation',
-      type: 'bar',
-      data: [
-        2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3
-      ],
-      markPoint: {
-        data: [
-          { name: 'Max', value: 182.2, coord: [7, 183] },
-          { name: 'Min', value: 2.3, coord: [11, 3] }
-        ]
-      },
-      markLine: {
-        data: [{ type: 'average', name: 'Avg' }]
-      }
-        }
+    }
       ]
     };
 
