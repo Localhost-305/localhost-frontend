@@ -8,6 +8,7 @@ import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-des
 import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
+import styles from '../styles/DashboardScreen.module.css'
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from '../../firstScreen';
 import { Dayjs } from 'dayjs';
@@ -23,6 +24,7 @@ import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
 import { ContainerRowResponsive } from '../../../shared/components/styles/containerRowResponsive.style';
+import { ResponsiveTable } from '../../../shared/components/styles/tableResponsive.style';
 import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
@@ -276,9 +278,10 @@ const DashboardScreen = () => {
       </BoxButtons>
 
       <ContainerRowResponsive maxWidth={'800px'}>
-        <Table columns={columns}
+        <ResponsiveTable columns={columns}
+              className="table-responsive"
               dataSource={jobs}
-              bordered style={{ width: '45%', height: '300px' }}
+              bordered 
               pagination={{ pageSize: 5 }}
               rowKey={(doc) => doc.JobTitle}
               components={{
@@ -314,7 +317,7 @@ const DashboardScreen = () => {
       <LimitedContainer width={800}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small> 
-        <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
+        <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
       </LimitedContainer>
 
       <Modal title={titleDoubt} 
