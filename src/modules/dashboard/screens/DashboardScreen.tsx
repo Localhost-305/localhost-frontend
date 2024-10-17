@@ -138,16 +138,11 @@ const DashboardScreen = () => {
     const chartDom = chartRefCosts.current;
     const myChart = echarts.init(chartDom);
 
-    let orderedMonths: number[] = [];
-    let variableMonth: number = 1;
- 
-    let i: number = 1;
-    while(i < monthlyCosts.length){
-      if
-      
-    }
-    
-    const totalCosts = monthlyCosts.map((hiring: HiringCostType) => hiring.somaDoCusto);
+    const sortedCosts = monthlyCosts.sort((a: HiringCostType, b: HiringCostType) => a.mes - b.mes);
+
+    // Extrair os meses e os custos já ordenados
+    const orderedMonths = sortedCosts.map((hiring: HiringCostType) => hiring.mes);
+    const totalCosts = sortedCosts.map((hiring: HiringCostType) => hiring.somaDoCusto.toFixed(2));
     
     // ordenar do menor para o maior as duas variaveis
     const option: EChartOption = {
@@ -155,7 +150,27 @@ const DashboardScreen = () => {
         trigger: 'axis',
         axisPointer: {
           type: 'shadow',
-        }
+        },
+        formatter: function (params: any) {
+          // Verifica se 'params' é um array e se tem pelo menos um elemento.
+          // Isso garante que não tentaremos acessar índices de um array vazio ou de algo que não seja um array.
+          if (Array.isArray(params) && params.length > 0) {
+              
+              // Acessa o valor da propriedade 'data' do primeiro item do array 'params'.
+              // 'params[0].data' contém o valor numérico correspondente ao dado da série (custo total neste caso).
+              // 'toFixed(2)' é usado para limitar o número a duas casas decimais.
+              // 'replace('.', ',')' troca o ponto por vírgula para seguir a formatação brasileira de números decimais.
+              const value = params[0].data.toFixed(2).replace('.', ',');
+              
+              // 'params[0].name' é o nome correspondente ao eixo X (por exemplo, o mês).
+              // Retorna uma string formatada mostrando o nome do eixo X e o valor da barra com o símbolo 'R$'.
+              return `${params[0].name}: R$ ${value}`;
+          }
+          
+          // Se 'params' não for um array ou se estiver vazio, retorna uma string vazia.
+          // Isso previne que o tooltip tente mostrar informações inválidas ou cause erros.
+          return '';
+      }
       },
       grid: {
         left: '3%',
@@ -166,7 +181,7 @@ const DashboardScreen = () => {
       xAxis: [
         {
           type: 'category',
-          data: months,
+          data: orderedMonths,
           axisTick: {
             alignWithLabel: true
           }
@@ -174,7 +189,10 @@ const DashboardScreen = () => {
       ],
       yAxis: [
         {
-          type: 'value'
+          type: 'value',
+          axisLabel: {
+            formatter: 'R$ {value}'
+          }
         }
       ],
       series: [
@@ -243,9 +261,9 @@ const DashboardScreen = () => {
       request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setCandidates);
-      // request(`${URL_HIRING}/cost?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
-      //   MethodsEnum.GET,
-      //   setMonthlyCosts); // Requisição atualizada para buscar custos mensais no intervalo de datas
+       request(`${URL_HIRING}/cost?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+         MethodsEnum.GET,
+        setMonthlyCosts); // Requisição atualizada para buscar custos mensais no intervalo de datas
     }else{
       try{
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
