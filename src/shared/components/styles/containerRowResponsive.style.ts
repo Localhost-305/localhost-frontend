@@ -23,4 +23,4 @@ export const ContainerRowResponsive = styled.div<ContainerRowResponsiveProps>`
         width: 100%; 
         margin: 0px;
     }
-`;
+}`;

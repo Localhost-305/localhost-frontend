@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 export const ResponsiveTable = styled(Table)`
   width: 100%; 
+  margin-top: 20px;
 
   @media (min-width: 1201px) {
     width: 50%; 

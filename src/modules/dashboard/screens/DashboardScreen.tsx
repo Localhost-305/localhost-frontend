@@ -250,17 +250,17 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
+          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
+            onClick={handleSearch} />
+        </div>
+        <div>
           <Select
             defaultValue="a1"
             onChange={handleChange}
             style={{ width: 200 }}
             options={options}
         />
-        </div>
-        <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
-          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
-            onClick={handleSearch} />
         </div>
         <div>
           <Upload
@@ -271,7 +271,9 @@ const DashboardScreen = () => {
             maxCount={1}>
             <Button icon={<UploadOutlined />}>Selecionar Arquivo Excel</Button>
           </Upload>
-          <Button type="primary" onClick={handleUpload} style={{ marginTop: 16 }}>
+        </div>
+        <div>
+          <Button type="primary" onClick={handleUpload}>
             Enviar Arquivo
           </Button>
         </div>
@@ -294,7 +296,7 @@ const DashboardScreen = () => {
                 }
               }} />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
               onClick={() => 
                 showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
@@ -306,7 +308,7 @@ const DashboardScreen = () => {
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
               onClick={() => 
                 showModalDoubts('Tempo médio',
                 'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
