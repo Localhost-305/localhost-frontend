@@ -16,7 +16,7 @@ import { JobsType } from '../../../shared/types/JobsType';
 import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -25,19 +25,23 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
-
+// Importa o tipo MonthlyCostType que define a estrutura dos dados de custo mensal recebidos da API
+// O código traz a interface HiringCostType de um arquivo específico para que você possa usá-la no seu arquivo atual.
+import { HiringCostType } from '../../../shared/types/HiringCostType';
+import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
-  const [ jobs, setJobs ] = useState<JobsType[]>([]);
-  const [ candidates, setCandidates ] = useState<CandidatesType[]>([]);
-  const [ jobsAverageAll, setJobsAverageAll ] = useState<JobAverageAllType[]>([]);
+  const [jobs, setJobs] = useState<JobsType[]>([]);
+  const [candidates, setCandidates] = useState<CandidatesType[]>([]);
+  const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
   const { RangePicker } = DatePicker;
-  const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
-  const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
-  const [ fileList, setFileList ] = useState<any[]>([]);
+  const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
+  const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -50,18 +54,22 @@ const DashboardScreen = () => {
   // EVENTS
   useEffect(() => {
     setLoading(true);
-    try{
-      request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+    try {
+      request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-    }catch(error){
+      // adiciona a requisição para os custos mensais
+      // O código faz um pedido para buscar os custos mensais de contratações e, quando receber os dados, usa a função setMonthlyCosts para processá-los
+      request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
+    } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
-    }finally{
+    } finally {
       setLoading(false);
     }
   }, [])
 
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartRefCosts = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
@@ -123,6 +131,94 @@ const DashboardScreen = () => {
     };
   }, [jobs]);
 
+  //custo
+  useEffect(() => {
+    if (!chartRefCosts.current || monthlyCosts.length === 0) return;
+    const chartDom = chartRefCosts.current;
+    const myChart = echarts.init(chartDom);
+
+    const sortedCosts = monthlyCosts.sort((a: HiringCostType, b: HiringCostType) => {
+      if (a.ano === b.ano) {
+        return a.mes - b.mes;
+      }
+      return a.ano - b.ano;
+    });
+    const orderedMonths = sortedCosts.map((hiring: HiringCostType) => `${String(hiring.mes).padStart(2, '0')}-${hiring.ano}`);
+    const totalCosts = sortedCosts.map((hiring: HiringCostType) => hiring.somaDoCusto);
+
+    const totalSum = totalCosts.reduce((acc, cost) => acc + cost, 0);
+
+    const averageCost = totalSum / (totalCosts.length || 1);
+    const formattedAverageCost = `R$ ${convertNumberToMoney(averageCost)}`;
+
+
+    const option: EChartOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow',
+        },
+        formatter: (params: EChartOption.Tooltip.Format | EChartOption.Tooltip.Format[]) => {
+          if (Array.isArray(params) && params.length > 0) {
+            const value: number | any = params[0].value;
+            return `${convertNumberToMoney(value)} - ${params[0].axisValue}`;
+          } else if (!Array.isArray(params) && params.value) {
+            const value: number | any = params.value;
+            return convertNumberToMoney(value);
+          } else {
+            return "";
+          }
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: [
+        {
+          type: 'category',
+          data: orderedMonths,
+          axisTick: {
+            alignWithLabel: true
+          }
+        }
+      ],
+      yAxis: [
+        {
+          type: 'value',
+          axisLabel: {
+            formatter: (value: number) => {return convertNumberToMoney(value)}
+          }
+        }
+      ],
+      series: [
+        {
+          name: 'Custo Total',
+          type: 'bar',
+          barWidth: '60%',
+          data: totalCosts,
+          markPoint: {
+            data: [
+              { type: 'max', name: 'Max' },
+              { type: 'min', name: 'Min' }
+            ]
+          },
+          markLine: {
+            data: [{ yAxis: averageCost, name: `Avg (R$ ${formattedAverageCost})` }]
+          }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+
+    return () => {
+      myChart.dispose();
+    };
+  }, [monthlyCosts]);
+
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -151,47 +247,52 @@ const DashboardScreen = () => {
   }
 
   const handleSearch = () => {
-    if(startDateStr && endDateStr) {
+    if (startDateStr && endDateStr) {
+      // console.log(`Start Date: ${startDateStr?.format('YYYY-MM-DD')}, End Date: ${endDateStr?.format('YYYY-MM-DD')}`);
       request(
-        `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-        MethodsEnum.GET, 
+        `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
         setJobsAverageAll);
-        request(
-          `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-          MethodsEnum.GET, 
-          setJobs);
-      request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-        MethodsEnum.GET, 
+      request(
+        `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setJobs);
+      request(`${URL_APPLICATIONS}/jobs?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
         setCandidates);
-    }else{
-      try{
+      request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setMonthlyCosts); // Requisição atualizada para buscar custos mensais no intervalo de datas
+    } else {
+      try {
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-      }catch(error){
+        request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
+      } catch (error) {
         setNotification(String(error), NotificationEnum.ERROR);
-      }finally{
+      } finally {
         setLoading(false);
       }
     }
   }
 
   // MODAL DOUBTS
-  const [ isModalDoubtsOpen, setIsModalDoubtsOpen ] = useState(false);
-  const [ contentDoubt, setContentDoubt ] = useState<String>('');
-  const [ titleDoubt, setTitleDoubt ] = useState<String>('');
+  const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
+  const [contentDoubt, setContentDoubt] = useState<String>('');
+  const [titleDoubt, setTitleDoubt] = useState<String>('');
 
   const showModalDoubts = (title: string, content: string) => {
-      setTitleDoubt(title);
-      setContentDoubt(content);
-      setIsModalDoubtsOpen(true);
+    setTitleDoubt(title);
+    setContentDoubt(content);
+    setIsModalDoubtsOpen(true);
   }
 
   // EXCEL
   const handleBeforeUpload = (file: File) => {
     const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
-  
+
     return isExcel || Upload.LIST_IGNORE;
   };
 
@@ -230,8 +331,8 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
-          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em' }} />
+          <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
             onClick={handleSearch} />
         </div>
         <div>
@@ -251,53 +352,58 @@ const DashboardScreen = () => {
 
       <ContainerRowResponsive maxWidth={'800px'}>
         <Table columns={columns}
-              dataSource={jobs}
-              bordered style={{ width: '45%', height: '300px' }}
-              pagination={{ pageSize: 5 }}
-              rowKey={(doc) => doc.JobTitle}
-              components={{
-                header: {
-                  cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                    <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                      {props.children}
-                    </th>
-                  )
-                }
-              }} />
+          dataSource={jobs}
+          bordered style={{ width: '45%', height: '300px' }}
+          pagination={{ pageSize: 5 }}
+          rowKey={(doc) => doc.JobTitle}
+          components={{
+            header: {
+              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                  {props.children}
+                </th>
+              )
+            }
+          }} />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
-              onClick={() => 
-                showModalDoubts('Tempo médio de contratação por cargo',
+          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-          
+
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
-              onClick={() => 
-                showModalDoubts('Tempo médio',
+          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio',
                 'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-        
+
       </ContainerRowResponsive>
 
-      <LimitedContainer width={800}>
+      <LimitedContainer width={1200}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
+
+        {/* Novo gráfico de custos mensais */}
+        <h2>Custos Mensais de Contratação</h2>
+        <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
+        <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
       </LimitedContainer>
 
-      <Modal title={titleDoubt} 
-          open={isModalDoubtsOpen} 
-          onOk={() => setIsModalDoubtsOpen(false)} 
-          onCancel={() => setIsModalDoubtsOpen(false)}>
-          <p>{contentDoubt}</p>
+      <Modal title={titleDoubt}
+        open={isModalDoubtsOpen}
+        onOk={() => setIsModalDoubtsOpen(false)}
+        onCancel={() => setIsModalDoubtsOpen(false)}>
+        <p>{contentDoubt}</p>
       </Modal>
-      
+
     </Screen>
   )
 };
