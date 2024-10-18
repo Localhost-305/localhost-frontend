@@ -1,41 +1,45 @@
-import { Typography , Menu as MenuAntd } from "antd";
+import Navbar from "react-bootstrap/esm/Navbar";
 import styled from "styled-components";
-import { Menu as AntMenu } from 'antd';
 
-const { Text } = Typography;
-
-export const ContainerMenu = styled.div`
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 240px;
+// Container geral do Header
+export const HeaderContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 30px;
     background-color: var(--gray-dark);
-    -webkit-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
-    -moz-box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
-    box-shadow: 1px 0px 8px 0px rgba(0,0,0,0.71);
-
-    @media (max-width: 768px) {
-        width: 100px; /* Reduz a largura em telas menores */
-    }
+    box-shadow: 1px 0px 8px 0px rgba(0, 0, 0, 0.71);
 `;
 
-export const StyledMenu = styled(AntMenu)`
+// Adaptação do estilo de logo e menu
+export const ContainerLogoName = styled.div`
+    display: flex;
+    align-items: center;
+`;
+
+// Container de menu adaptado para o header
+export const MenuContainer = styled.div`
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+`;
+
+export const StyledMenu = styled(Navbar)`
     background-color: var(--gray-dark);
     color: var(--white);
-    border: none; 
-
-    .ant-menu-item {
-        color: var(--white); 
+    border: none;
+    width: 100%;
+    .nav-link {
+        color: var(--white);
     }
-
-    @media (max-width: 768px) {
-        .ant-menu-item {
-            font-size: 12px; /* Ajustar o tamanho do texto para telas menores */
-        }
+    
+    .nav-link:hover {
+        color: var(--orange);
     }
 `;
 
-export const NameCompany = styled(Text)`
-    color: black;
+export const NameCompany = styled.div`
+    color: white;
+    font-size: 16px;
+    margin-left: 10px;
 `;
