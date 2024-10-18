@@ -41,8 +41,8 @@ const DashboardScreen = () => {
   const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
   const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
   const [ fileList, setFileList ] = useState<any[]>([]);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const [options, setOptions] = useState<SelectProps['options']>([]);
+  const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
+  const [ options, setOptions ] = useState<SelectProps['options']>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -159,12 +159,12 @@ const DashboardScreen = () => {
           `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
           MethodsEnum.GET, 
           setJobs);
-      request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
+      request(`${URL_APPLICATIONS}/jobs?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setCandidates);
     }else{
       try{
-        request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+        request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       }catch(error){
@@ -317,14 +317,14 @@ const DashboardScreen = () => {
           
         <StyledCard bordered>
           <div className="card-bg"></div>
-          <h1 className="card-title">Tempo Médio</h1>
+          <h1 className="card-title">Tempo Médio Total</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{marginBottom: '15em'}}
               onClick={() => 
-                showModalDoubts('Tempo médio',
-                'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
+                showModalDoubts('Tempo médio total',
+                'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos. Filtro de vaga não é aplicado ao Cartão. ')} />
         </Tooltip>
         
       </ContainerRowResponsive>
