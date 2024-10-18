@@ -25,8 +25,6 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
-// Importa o tipo MonthlyCostType que define a estrutura dos dados de custo mensal recebidos da API
-// O código traz a interface HiringCostType de um arquivo específico para que você possa usá-la no seu arquivo atual.
 import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 
@@ -58,8 +56,6 @@ const DashboardScreen = () => {
       request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-      // adiciona a requisição para os custos mensais
-      // O código faz um pedido para buscar os custos mensais de contratações e, quando receber os dados, usa a função setMonthlyCosts para processá-los
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
@@ -248,7 +244,6 @@ const DashboardScreen = () => {
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
-      // console.log(`Start Date: ${startDateStr?.format('YYYY-MM-DD')}, End Date: ${endDateStr?.format('YYYY-MM-DD')}`);
       request(
         `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
@@ -262,7 +257,7 @@ const DashboardScreen = () => {
         setCandidates);
       request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
-        setMonthlyCosts); // Requisição atualizada para buscar custos mensais no intervalo de datas
+        setMonthlyCosts);
     } else {
       try {
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
