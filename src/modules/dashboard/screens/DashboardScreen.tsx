@@ -17,7 +17,7 @@ import { JobsType } from '../../../shared/types/JobsType';
 import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -26,6 +26,7 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
+import { RetentionType } from '../../../shared/types/RetentionType';
 
 
 const DashboardScreen = () => {
@@ -39,6 +40,7 @@ const DashboardScreen = () => {
   const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
   const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
   const [ fileList, setFileList ] = useState<any[]>([]);
+  const [ retention, setRetention ] = useState<RetentionType[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -53,7 +55,7 @@ const DashboardScreen = () => {
     setLoading(true);
     try{
       request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
-      // request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates); sera inserido o request média
+      request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetention); 
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
     }catch(error){
@@ -165,10 +167,13 @@ const DashboardScreen = () => {
       request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
         MethodsEnum.GET, 
         setCandidates);
+        request(`${URL_HIRING}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
+        MethodsEnum.GET, 
+        setRetention);  
     }else{
       try{
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
-        // request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidates); sera inserido o request média
+        request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetention); 
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       }catch(error){
@@ -282,7 +287,7 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} dias</span></h2>
+          <h2 className="card-date"><span>{retention.length > 0 ? retention[0].average_retention_days : 0} dias</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{marginBottom: '15em'}}
