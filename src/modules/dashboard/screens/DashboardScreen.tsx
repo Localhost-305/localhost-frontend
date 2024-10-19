@@ -29,7 +29,7 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
-
+import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -319,7 +319,9 @@ const DashboardScreen = () => {
       <LimitedContainer width={800}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small> 
-        <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+        <ScrollableDiv>
+          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+        </ScrollableDiv>
       </LimitedContainer>
 
       <Modal title={titleDoubt} 
