@@ -291,7 +291,7 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{retentions.length > 0 ? retentions[0].average_retention_days : 10} dias</span></h2>
+          <h2 className="card-date"><span>{retentions.length > 0 ?  Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: '15em' }}
