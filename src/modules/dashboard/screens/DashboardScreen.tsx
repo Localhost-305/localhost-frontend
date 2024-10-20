@@ -145,13 +145,15 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-  const handleStartDateChange = (date: Dayjs | null) => {
-    setStartDateStr(date);
-  };
-
-  const handleEndDateChange = (date: Dayjs | null) => {
-    setEndDateStr(date);
-  };
+  const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates) {
+      setStartDateStr(dates[0]);
+      setEndDateStr(dates[1]);
+    } else {
+      setStartDateStr(null);
+      setEndDateStr(null);
+    }
+  }
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -278,18 +280,7 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <DatePicker 
-            key={'startDate'} 
-            onChange={handleStartDateChange} 
-            placeholder="Data Inicial" 
-            style={{ marginRight: '10px' }} 
-          />
-          <DatePicker 
-            key={'endDate'} 
-            onChange={handleEndDateChange} 
-            placeholder="Data Final" 
-            style={{ marginRight: '10px' }} 
-          />
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
         </div>
