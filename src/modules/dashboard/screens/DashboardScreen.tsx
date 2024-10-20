@@ -143,15 +143,13 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-  const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
-    if (dates) {
-      setStartDateStr(dates[0]);
-      setEndDateStr(dates[1]);
-    } else {
-      setStartDateStr(null);
-      setEndDateStr(null);
-    }
-  }
+  const handleStartDateChange = (date: Dayjs | null) => {
+    setStartDateStr(date);
+  };
+
+  const handleEndDateChange = (date: Dayjs | null) => {
+    setEndDateStr(date);
+  };
 
   const handleSearch = () => {
     if(startDateStr && endDateStr) {
@@ -269,7 +267,18 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
+          <DatePicker 
+            key={'startDate'} 
+            onChange={handleStartDateChange} 
+            placeholder="Data Inicial" 
+            style={{ marginRight: '10px' }} 
+          />
+          <DatePicker 
+            key={'endDate'} 
+            onChange={handleEndDateChange} 
+            placeholder="Data Final" 
+            style={{ marginRight: '10px' }} 
+          />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
         </div>
@@ -300,44 +309,23 @@ const DashboardScreen = () => {
       </BoxButtons>
 
       <ContainerRowResponsive maxWidth={'800px'}>
-/*
-        <ResponsiveTable columns={columns}
-              className="table-responsive"
-              dataSource={jobs}
-              bordered 
-        <Table columns={columns}
-              dataSource={filteredJobs}
-              bordered style={{ width: '45%', height: '300px' }}
-              pagination={{ pageSize: 5 }}
-              rowKey={(doc) => doc.JobTitle}
-              components={{
-                header: {
-                  cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                    <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                      {props.children}
-                    </th>
-                  )
-                }
-              }} />
-          */
-          
-            <ResponsiveTable 
-        columns={columns}
-        className="table-responsive"
-        dataSource={filteredJobs} {/* Usando `filteredJobs` da branch dev */}
-        bordered
-        pagination={{ pageSize: 5 }}
-        rowKey={(doc) => doc.JobTitle}
-        components={{
+        <ResponsiveTable
+          columns={columns as any} 
+          className="table-responsive"
+          dataSource={filteredJobs} 
+          bordered
+          pagination={{ pageSize: 5 }}
+          rowKey={(doc: any) => doc.JobTitle} 
+          components={{
             header: {
-                cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                    <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                        {props.children}
-                    </th>
-                )
-            }
-        }} 
-    />
+              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                  {props.children}
+                </th>
+              ),
+            },
+          }}
+        />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
               onClick={() => 
