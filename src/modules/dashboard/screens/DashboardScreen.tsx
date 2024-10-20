@@ -2,10 +2,13 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
 import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Radio, Select, Space } from 'antd';
+import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
+import styles from '../styles/DashboardScreen.module.css'
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from '../../firstScreen';
 import { Dayjs } from 'dayjs';
@@ -14,6 +17,7 @@ import { LimitedContainer } from "../../../shared/components/styles/limited.styl
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { JobsType } from '../../../shared/types/JobsType';
 import { CandidatesType } from '../../../shared/types/CandidatesType';
+import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
 import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
@@ -21,25 +25,31 @@ import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
 import { ContainerRowResponsive } from '../../../shared/components/styles/containerRowResponsive.style';
+import { ResponsiveTable } from '../../../shared/components/styles/tableResponsive.style';
 import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
 import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
+import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
+
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
-  const [jobs, setJobs] = useState<JobsType[]>([]);
-  const [candidates, setCandidates] = useState<CandidatesType[]>([]);
-  const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
+  const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
+  const [ jobs, setJobs ] = useState<JobsType[]>([]);
+  const [ candidates, setCandidates ] = useState<CandidatesType[]>([]);
+  const [ candidate, setCandidate ] = useState<CandidateType[]>([]);
+  const [ jobsAverageAll, setJobsAverageAll ] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
   const { RangePicker } = DatePicker;
-  const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
-  const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
-  const [fileList, setFileList] = useState<any[]>([]);
-  const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
+  const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
+  const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
+  const [ fileList, setFileList ] = useState<any[]>([]);
+  const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
+  const [ options, setOptions ] = useState<SelectProps['options']>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -52,8 +62,9 @@ const DashboardScreen = () => {
   // EVENTS
   useEffect(() => {
     setLoading(true);
-    try {
+    try{
       request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidate);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
@@ -69,45 +80,38 @@ const DashboardScreen = () => {
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
-
+  
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
-
-    const jobNames = candidates.map((job: CandidatesType) => job.jobTitle);
-    const candidateCount = candidates.map((job: CandidatesType) => job.count);
-
-    const option: EChartOption = {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow',
-        }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: [
-        {
+  
+    // Define os dados de acordo com o job selecionado
+    const dataToUse = selectedJob 
+      ? candidates.filter((candidate: CandidatesType) => candidate.jobTitle === selectedJob)
+      : candidates;
+  
+    if (dataToUse.length > 0) {
+      const jobNames = dataToUse.map((job: CandidatesType) => job.jobTitle);
+      const candidateCount = dataToUse.map((job: CandidatesType) => job.count);
+  
+      const option: EChartOption = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: [{
           type: 'category',
           data: jobNames,
-          axisTick: {
-            alignWithLabel: true
-          },
-          axisLabel: {
-            show: false,
-          },
-        }
-      ],
-      yAxis: [
-        {
-          type: 'value'
-        }
-      ],
-      series: [
-        {
+          axisTick: { alignWithLabel: true },
+          axisLabel: { show: false }
+        }],
+        yAxis: [{ type: 'value' }],
+        series: [{
           name: 'Candidatos',
           type: 'bar',
           barWidth: '60%',
@@ -116,16 +120,16 @@ const DashboardScreen = () => {
             color: '#007BFF',
             barBorderRadius: [8, 8, 0, 0]
           }
-        }
-      ]
-    };
-
-    myChart.setOption(option);
-
-    return () => {
-      myChart.dispose();
-    };
-  }, [jobs]);
+        }]
+      };
+  
+      myChart.setOption(option);
+  
+      return () => {
+        myChart.dispose();
+      };
+    }
+  }, [jobs, selectedJob, candidates]);  
 
   //custo
   useEffect(() => {
@@ -232,15 +236,13 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-  const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
-    if (dates) {
-      setStartDateStr(dates[0]);
-      setEndDateStr(dates[1]);
-    } else {
-      setStartDateStr(null);
-      setEndDateStr(null);
-    }
-  }
+  const handleStartDateChange = (date: Dayjs | null) => {
+    setStartDateStr(date);
+  };
+
+  const handleEndDateChange = (date: Dayjs | null) => {
+    setEndDateStr(date);
+  };
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -291,6 +293,42 @@ const DashboardScreen = () => {
     return isExcel || Upload.LIST_IGNORE;
   };
 
+  // FILTRO
+
+  useEffect(() => {
+    setLoading(true);
+    try {
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
+      setCandidate(data);
+        const jobOptions = data.map((item: CandidateType) => ({
+          value: item.jobTitle,
+          label: item.jobTitle
+        }));
+        setOptions(jobOptions);
+      });
+    } catch (error) {
+      setNotification(String(error), NotificationEnum.ERROR);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+  const handleJobChange = (value: string) => {
+    setSelectedJob(value);
+    
+  const filteredCandidate = candidate.filter(candidate => candidate.jobTitle === value);
+  setCandidate(filteredCandidate); 
+  };
+
+  const filteredJobs = selectedJob 
+  ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
+  : jobs;
+
+  const handleChange = (value: string | string[]) => {
+    console.log(`Selected: ${value}`);
+  };
+
   const handleUpload = async () => {
     if (fileList.length === 0) {
       setNotification("Por favor, envie um arquivo primeiro!", NotificationEnum.ERROR);
@@ -326,9 +364,29 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em' }} />
-          <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
+          <DatePicker 
+            key={'startDate'} 
+            onChange={handleStartDateChange} 
+            placeholder="Data Inicial" 
+            style={{ marginRight: '10px' }} 
+          />
+          <DatePicker 
+            key={'endDate'} 
+            onChange={handleEndDateChange} 
+            placeholder="Data Final" 
+            style={{ marginRight: '10px' }} 
+          />
+          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
+        </div>
+        <div>
+          <Select
+            defaultValue={null}
+            onChange={handleJobChange}
+            style={{ width: 200 }}
+            options={options}
+            placeholder="Selecione uma vaga"
+        />
         </div>
         <div>
           <Upload
@@ -339,44 +397,49 @@ const DashboardScreen = () => {
             maxCount={1}>
             <Button icon={<UploadOutlined />}>Selecionar Arquivo Excel</Button>
           </Upload>
-          <Button type="primary" onClick={handleUpload} style={{ marginTop: 16 }}>
+        </div>
+        <div>
+          <Button type="primary" onClick={handleUpload}>
             Enviar Arquivo
           </Button>
         </div>
       </BoxButtons>
 
       <ContainerRowResponsive maxWidth={'800px'}>
-        <Table columns={columns}
-          dataSource={jobs}
-          bordered style={{ width: '45%', height: '300px' }}
+        <ResponsiveTable
+          columns={columns as any} 
+          className="table-responsive"
+          dataSource={filteredJobs} 
+          bordered
           pagination={{ pageSize: 5 }}
-          rowKey={(doc) => doc.JobTitle}
+          rowKey={(doc: any) => doc.JobTitle} 
           components={{
             header: {
               cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
                 <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
                   {props.children}
                 </th>
-              )
-            }
-          }} />
+              ),
+            },
+          }}
+        />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
-            onClick={() =>
-              showModalDoubts('Tempo médio de contratação por cargo',
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
+              onClick={() => 
+                showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
 
         <StyledCard bordered>
           <div className="card-bg"></div>
-          <h1 className="card-title">Tempo Médio</h1>
+          <h1 className="card-title">Tempo Médio Total</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
-            onClick={() =>
-              showModalDoubts('Tempo médio',
-                'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
+              onClick={() => 
+                showModalDoubts('Tempo médio total',
+                'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos. Filtro de vaga não é aplicado ao Cartão. ')} />
         </Tooltip>
 
       </ContainerRowResponsive>
@@ -384,7 +447,9 @@ const DashboardScreen = () => {
       <LimitedContainer width={1200}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
-        <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
+        <ScrollableDiv>
+          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+        </ScrollableDiv>
 
         {/* Novo gráfico de custos mensais */}
         <h2>Custos Mensais de Contratação</h2>

@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { DownOutlined, UserOutlined} from '@ant-design/icons';
+import { DownOutlined, UserOutlined } from '@ant-design/icons';
 import { Dropdown, Modal, Avatar, Button } from 'antd';
 import type { MenuProps } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import Menu  from "../menu/Menu"
+import { useNavigate, Link } from 'react-router-dom'; 
 import { logout } from "../../functions/connection/auth";
-import { HeaderContainer, MenuContainer, ContainerLogoName } from "./Header.style"
+import { HeaderContainer, MenuContainer, ContainerLogoName, StyledMenu } from "../menu/menu.style";
 import { getItemStorage } from "../../functions/connection/storageProxy";
 import { NAME } from "../../constants/authorizationConstants";
-
+import { DashboardRoutesEnum } from '../../../modules/dashboard/routes';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -26,14 +29,6 @@ const Header = () => {
     const userPhoto = '';
 
     const items: MenuProps['items'] = [
-        // {
-        //     key: '1',
-        //     label: (
-        //         <a target="_blank" rel="noopener noreferrer" href="#">
-        //             Perfil
-        //         </a>
-        //     ),
-        // }
         {
             key: '3',
             label: 'Sair',
@@ -58,10 +53,18 @@ const Header = () => {
             <HeaderContainer>
                 <ContainerLogoName>
                     <img src="logo-sem-fundo.png" alt="Logo" style={{ height: '70px',  marginLeft: '10px', marginRight: '10px' }} />
-                    <MenuContainer style={{ width: '100%' }}>
-                        <Menu />
-                    </MenuContainer>
                 </ContainerLogoName>
+
+                <StyledMenu>
+                    <Container>
+                        <Nav className="me-auto">
+                        <Nav.Link as={Link} to={DashboardRoutesEnum.DASHBOARD}>
+                                Dashboard
+                            </Nav.Link>
+                        </Nav>
+                    </Container>
+                </StyledMenu>
+
                 <Dropdown menu={{ items }}>
                     <Button type="link" 
                     style={{ 

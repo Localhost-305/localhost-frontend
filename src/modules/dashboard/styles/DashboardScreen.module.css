@@ -1,0 +1,26 @@
+.echartsContainer {
+    width: 100%;
+  }
+  
+@media (max-width: 768px) {
+  .echartsContainer {
+    width: 390px;
+  }
+}
+
+.table-responsive {
+  width: 100%; 
+  max-width: 100%; 
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .table-responsive {
+    width: 80%; 
+  }
+}
+
+@media (min-width: 1201px) {
+  .table-responsive {
+    width: 50%; 
+  }
+}
