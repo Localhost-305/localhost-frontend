@@ -26,21 +26,21 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
-import { RetentionType } from '../../../shared/types/RetentionType';
+//import { RetentionType } from '../../../shared/types/RetentionType';
 
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
-  const [ jobs, setJobs ] = useState<JobsType[]>([]);
-  const [ candidates, setCandidates ] = useState<CandidatesType[]>([]);
-  const [ jobsAverageAll, setJobsAverageAll ] = useState<JobAverageAllType[]>([]);
+  const [jobs, setJobs] = useState<JobsType[]>([]);
+  const [candidates, setCandidates] = useState<CandidatesType[]>([]);
+  const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
   const { RangePicker } = DatePicker;
-  const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
-  const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
-  const [ fileList, setFileList ] = useState<any[]>([]);
-  const [ retention, setRetention ] = useState<RetentionType[]>([]);
+  const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
+  const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [retentions, setRetentions] = useState<any[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -53,14 +53,14 @@ const DashboardScreen = () => {
   // EVENTS
   useEffect(() => {
     setLoading(true);
-    try{
+    try {
       request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
-      request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetention); 
+      request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-    }catch(error){
+    } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
-    }finally{
+    } finally {
       setLoading(false);
     }
   }, [])
@@ -155,51 +155,56 @@ const DashboardScreen = () => {
   }
 
   const handleSearch = () => {
-    if(startDateStr && endDateStr) {
+    if (startDateStr && endDateStr) {
+
+      
       request(
-        `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-        MethodsEnum.GET, 
+        `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
         setJobsAverageAll);
-        request(
-          `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-          MethodsEnum.GET, 
-          setJobs);
-      request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-        MethodsEnum.GET, 
+      request(
+        `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setJobs);
+      request(`${URL_APPLICATIONS}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
         setCandidates);
-        request(`${URL_HIRING}?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`, 
-        MethodsEnum.GET, 
-        setRetention);  
-    }else{
-      try{
+      request(`${URL_HIRING}/retention?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setRetentions);
+
+
+        
+    } else {
+      try {
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
-        request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetention); 
+        request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-      }catch(error){
+      } catch (error) {
         setNotification(String(error), NotificationEnum.ERROR);
-      }finally{
+      } finally {
         setLoading(false);
       }
     }
   }
 
   // MODAL DOUBTS
-  const [ isModalDoubtsOpen, setIsModalDoubtsOpen ] = useState(false);
-  const [ contentDoubt, setContentDoubt ] = useState<String>('');
-  const [ titleDoubt, setTitleDoubt ] = useState<String>('');
+  const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
+  const [contentDoubt, setContentDoubt] = useState<String>('');
+  const [titleDoubt, setTitleDoubt] = useState<String>('');
 
   const showModalDoubts = (title: string, content: string) => {
-      setTitleDoubt(title);
-      setContentDoubt(content);
-      setIsModalDoubtsOpen(true);
+    setTitleDoubt(title);
+    setContentDoubt(content);
+    setIsModalDoubtsOpen(true);
   }
 
   // EXCEL
   const handleBeforeUpload = (file: File) => {
     const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
-  
+
     return isExcel || Upload.LIST_IGNORE;
   };
 
@@ -238,8 +243,8 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
-          <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em' }} />
+          <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
             onClick={handleSearch} />
         </div>
         <div>
@@ -259,26 +264,26 @@ const DashboardScreen = () => {
 
       <ContainerRowResponsive maxWidth={'800px'}>
         <Table columns={columns}
-              dataSource={jobs}
-              bordered style={{ width: '45%', height: '300px' }}
-              pagination={{ pageSize: 5 }}
-              rowKey={(doc) => doc.JobTitle}
-              components={{
-                header: {
-                  cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                    <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                      {props.children}
-                    </th>
-                  )
-                }
-              }} />
+          dataSource={jobs}
+          bordered style={{ width: '45%', height: '300px' }}
+          pagination={{ pageSize: 5 }}
+          rowKey={(doc) => doc.JobTitle}
+          components={{
+            header: {
+              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                  {props.children}
+                </th>
+              )
+            }
+          }} />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
-              onClick={() => 
-                showModalDoubts('Tempo médio de contratação por cargo',
+          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-          
+
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio</h1>
@@ -287,15 +292,15 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{retention.length > 0 ? retention[0].average_retention_days : 0} dias</span></h2>
+          <h2 className="card-date"><span>{retentions.length > 0 ? retentions[0].average_retention_days : 10} dias</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{marginBottom: '15em'}}
-              onClick={() => 
-                showModalDoubts('Tempo médio',
+          <QuestionCircleOutlined style={{ marginBottom: '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio',
                 'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-        
+
       </ContainerRowResponsive>
 
       <LimitedContainer width={800}>
@@ -304,13 +309,13 @@ const DashboardScreen = () => {
         <div key={'echarts'} ref={chartRef} style={{ width: '100%', height: '300px', marginBottom: '50px' }} />
       </LimitedContainer>
 
-      <Modal title={titleDoubt} 
-          open={isModalDoubtsOpen} 
-          onOk={() => setIsModalDoubtsOpen(false)} 
-          onCancel={() => setIsModalDoubtsOpen(false)}>
-          <p>{contentDoubt}</p>
+      <Modal title={titleDoubt}
+        open={isModalDoubtsOpen}
+        onOk={() => setIsModalDoubtsOpen(false)}
+        onCancel={() => setIsModalDoubtsOpen(false)}>
+        <p>{contentDoubt}</p>
       </Modal>
-      
+
     </Screen>
   )
 };
