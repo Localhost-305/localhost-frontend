@@ -9,6 +9,7 @@ export const StyledCard = styled(Card)`
   border-radius: 28px;
   transition: transform 0.5s ease;
   border: 1px solid var(--yellow);
+  margin-top: 20px;
   width: 360px; 
   height: 200px; 
 
