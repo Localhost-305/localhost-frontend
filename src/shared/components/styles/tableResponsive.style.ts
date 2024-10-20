@@ -6,7 +6,7 @@ export const ResponsiveTable = styled(Table)`
   margin-top: 20px;
 
   @media (min-width: 1201px) {
-    width: 50%; 
+    width: 35%; 
   }
 
   @media (max-width: 1200px) {
