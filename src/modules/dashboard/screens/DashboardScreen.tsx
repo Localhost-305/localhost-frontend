@@ -64,7 +64,7 @@ const DashboardScreen = () => {
   useEffect(() => {
     setLoading(true);
     try {
-      request(`${`${URL_APPLICATIONS}/jobs`}/jobs`, MethodsEnum.GET, setCandidates);
+      request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
       request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
       request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidate);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
@@ -79,6 +79,17 @@ const DashboardScreen = () => {
 
   const chartRef = useRef<HTMLDivElement>(null);
   const chartRefCosts = useRef<HTMLDivElement>(null);
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
@@ -238,15 +249,13 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-  const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
-    if (dates) {
-      setStartDateStr(dates[0]);
-      setEndDateStr(dates[1]);
-    } else {
-      setStartDateStr(null);
-      setEndDateStr(null);
-    }
-  }
+    const handleStartDateChange = (date: Dayjs | null) => {
+    setStartDateStr(date);
+  };
+
+  const handleEndDateChange = (date: Dayjs | null) => {
+    setEndDateStr(date);
+  };
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -264,15 +273,12 @@ const DashboardScreen = () => {
       request(`${URL_HIRING}/retention?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
         setRetentions);
-
-
-        
       request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
         setMonthlyCosts);
     }  else  {
       try  {
-        request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+        request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
         request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
@@ -367,24 +373,34 @@ const DashboardScreen = () => {
     setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
   };
 
-
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
       {isLoading && <FirstScreen />}
-
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
+          <DatePicker 
+            key={'startDate'} 
+            onChange={handleStartDateChange} 
+            placeholder="Data Inicial" 
+            style={{ marginRight: '10px' }} 
+          />
+          <DatePicker 
+            key={'endDate'} 
+            onChange={handleEndDateChange} 
+            placeholder="Data Final" 
+            style={{ marginRight: '10px' }} 
+          />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
         </div>
         <div>
           <Select
-            defaultValue="a1"
-            onChange={handleChange}
+            defaultValue={null}
+            onChange={handleJobChange}
             style={{ width: 200 }}
             options={options}
+            placeholder="Selecione uma vaga"
         />
         </div>
         <div>
@@ -403,7 +419,6 @@ const DashboardScreen = () => {
           </Button>
         </div>
       </BoxButtons>
-
       <ContainerRowResponsive maxWidth={'800px'}>
         <ResponsiveTable
           columns={columns as any} 
@@ -428,16 +443,10 @@ const DashboardScreen = () => {
                 showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio Total</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
-        </StyledCard>
-        <StyledCard bordered>
-          <div className="card-bg"></div>
-          <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{retentions.length > 0 ?  Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
@@ -445,29 +454,36 @@ const DashboardScreen = () => {
                 showModalDoubts('Tempo médio total',
                 'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos. Filtro de vaga não é aplicado ao Cartão. ')} />
         </Tooltip>
-
+        <StyledCard bordered>
+          <div className="card-bg"></div>
+          <h1 className="card-title">Retenção Média</h1>
+          <h2 className="card-date"><span>{retentions.length > 0 ?  Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
+        </StyledCard>
+        <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
+              onClick={() => 
+                showModalDoubts('Retenção Média',
+                'Neste cartão mostra a retenção média. ')} />
+        </Tooltip>
       </ContainerRowResponsive>
-
       <LimitedContainer width={1200}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <ScrollableDiv>
           <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
         </ScrollableDiv>
-
-        {/* Novo gráfico de custos mensais */}
-        <h2>Custos Mensais de Contratação</h2>
-        <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
-        <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
+        <ScrollableDiv>
+          <h2>Custos Mensais de Contratação</h2>
+          <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
+          <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
+        </ScrollableDiv>
       </LimitedContainer>
-
       <Modal title={titleDoubt}
         open={isModalDoubtsOpen}
         onOk={() => setIsModalDoubtsOpen(false)}
         onCancel={() => setIsModalDoubtsOpen(false)}>
         <p>{contentDoubt}</p>
       </Modal>
-
     </Screen>
   )
 };
