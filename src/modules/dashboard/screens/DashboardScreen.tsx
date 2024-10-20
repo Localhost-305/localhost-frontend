@@ -30,14 +30,17 @@ import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
+import { HiringCostType } from '../../../shared/types/HiringCostType';
+import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
-  const [jobs, setJobs] = useState<JobsType[]>([]);
-  const [candidates, setCandidates] = useState<CandidatesType[]>([]);
+  const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
+  const [ jobs, setJobs ] = useState<JobsType[]>([]);
+  const [ candidates, setCandidates ] = useState<CandidatesType[]>([]);
   const [ candidate, setCandidate ] = useState<CandidateType[]>([]);
   const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
@@ -66,6 +69,7 @@ const DashboardScreen = () => {
       request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidate);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
+      request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
     } finally {
@@ -74,6 +78,7 @@ const DashboardScreen = () => {
   }, [])
 
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartRefCosts = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
@@ -128,6 +133,94 @@ const DashboardScreen = () => {
     }
   }, [jobs, selectedJob, candidates]);  
 
+  //custo
+  useEffect(() => {
+    if (!chartRefCosts.current || monthlyCosts.length === 0) return;
+    const chartDom = chartRefCosts.current;
+    const myChart = echarts.init(chartDom);
+
+    const sortedCosts = monthlyCosts.sort((a: HiringCostType, b: HiringCostType) => {
+      if (a.ano === b.ano) {
+        return a.mes - b.mes;
+      }
+      return a.ano - b.ano;
+    });
+    const orderedMonths = sortedCosts.map((hiring: HiringCostType) => `${String(hiring.mes).padStart(2, '0')}-${hiring.ano}`);
+    const totalCosts = sortedCosts.map((hiring: HiringCostType) => hiring.somaDoCusto);
+
+    const totalSum = totalCosts.reduce((acc, cost) => acc + cost, 0);
+
+    const averageCost = totalSum / (totalCosts.length || 1);
+    const formattedAverageCost = `R$ ${convertNumberToMoney(averageCost)}`;
+
+
+    const option: EChartOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow',
+        },
+        formatter: (params: EChartOption.Tooltip.Format | EChartOption.Tooltip.Format[]) => {
+          if (Array.isArray(params) && params.length > 0) {
+            const value: number | any = params[0].value;
+            return `${convertNumberToMoney(value)} - ${params[0].axisValue}`;
+          } else if (!Array.isArray(params) && params.value) {
+            const value: number | any = params.value;
+            return convertNumberToMoney(value);
+          } else {
+            return "";
+          }
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: [
+        {
+          type: 'category',
+          data: orderedMonths,
+          axisTick: {
+            alignWithLabel: true
+          }
+        }
+      ],
+      yAxis: [
+        {
+          type: 'value',
+          axisLabel: {
+            formatter: (value: number) => {return convertNumberToMoney(value)}
+          }
+        }
+      ],
+      series: [
+        {
+          name: 'Custo Total',
+          type: 'bar',
+          barWidth: '60%',
+          data: totalCosts,
+          markPoint: {
+            data: [
+              { type: 'max', name: 'Max' },
+              { type: 'min', name: 'Min' }
+            ]
+          },
+          markLine: {
+            data: [{ yAxis: averageCost, name: `Avg (R$ ${formattedAverageCost})` }]
+          }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+
+    return () => {
+      myChart.dispose();
+    };
+  }, [monthlyCosts]);
+
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -157,8 +250,6 @@ const DashboardScreen = () => {
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
-
-      
       request(
         `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
@@ -176,12 +267,16 @@ const DashboardScreen = () => {
 
 
         
-    } else {
-      try {
-        request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
+      request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setMonthlyCosts);
+    }  else  {
+      try  {
+        request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
         request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
+        request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
       } catch (error) {
         setNotification(String(error), NotificationEnum.ERROR);
       } finally {
@@ -353,12 +448,17 @@ const DashboardScreen = () => {
 
       </ContainerRowResponsive>
 
-      <LimitedContainer width={800}>
+      <LimitedContainer width={1200}>
         <h2>Quantidade de Candidaturas por Cargo</h2>
-        <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small> 
+        <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <ScrollableDiv>
           <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
         </ScrollableDiv>
+
+        {/* Novo gráfico de custos mensais */}
+        <h2>Custos Mensais de Contratação</h2>
+        <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
+        <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
       </LimitedContainer>
 
       <Modal title={titleDoubt}
