@@ -42,12 +42,13 @@ const DashboardScreen = () => {
   const [ jobs, setJobs ] = useState<JobsType[]>([]);
   const [ candidates, setCandidates ] = useState<CandidatesType[]>([]);
   const [ candidate, setCandidate ] = useState<CandidateType[]>([]);
-  const [ jobsAverageAll, setJobsAverageAll ] = useState<JobAverageAllType[]>([]);
+  const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
   const { RangePicker } = DatePicker;
-  const [ startDateStr, setStartDateStr ] = useState<Dayjs | null>(null);
-  const [ endDateStr, setEndDateStr ] = useState<Dayjs | null>(null);
-  const [ fileList, setFileList ] = useState<any[]>([]);
+  const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
+  const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [retentions, setRetentions] = useState<any[]>([]);
   const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
   const [ options, setOptions ] = useState<SelectProps['options']>([]);
 
@@ -62,8 +63,9 @@ const DashboardScreen = () => {
   // EVENTS
   useEffect(() => {
     setLoading(true);
-    try{
-      request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
+    try {
+      request(`${`${URL_APPLICATIONS}/jobs`}/jobs`, MethodsEnum.GET, setCandidates);
+      request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
       request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, setCandidate);
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
@@ -236,13 +238,15 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-  const handleStartDateChange = (date: Dayjs | null) => {
-    setStartDateStr(date);
-  };
-
-  const handleEndDateChange = (date: Dayjs | null) => {
-    setEndDateStr(date);
-  };
+  const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates) {
+      setStartDateStr(dates[0]);
+      setEndDateStr(dates[1]);
+    } else {
+      setStartDateStr(null);
+      setEndDateStr(null);
+    }
+  }
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -257,12 +261,19 @@ const DashboardScreen = () => {
       request(`${URL_APPLICATIONS}/jobs?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
         setCandidates);
+      request(`${URL_HIRING}/retention?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setRetentions);
+
+
+        
       request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
         MethodsEnum.GET,
         setMonthlyCosts);
-    } else {
-      try {
+    }  else  {
+      try  {
         request(URL_APPLICATIONS, MethodsEnum.GET, setCandidates);
+        request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
         request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
         request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
         request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
@@ -364,28 +375,16 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <DatePicker 
-            key={'startDate'} 
-            onChange={handleStartDateChange} 
-            placeholder="Data Inicial" 
-            style={{ marginRight: '10px' }} 
-          />
-          <DatePicker 
-            key={'endDate'} 
-            onChange={handleEndDateChange} 
-            placeholder="Data Final" 
-            style={{ marginRight: '10px' }} 
-          />
+          <RangePicker key={'datePicker'} onChange={(event) => handleDateChange(event)} style={{ border: '1px solid var(--gray)', marginBottom: '1em'}} />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
         </div>
         <div>
           <Select
-            defaultValue={null}
-            onChange={handleJobChange}
+            defaultValue="a1"
+            onChange={handleChange}
             style={{ width: 200 }}
             options={options}
-            placeholder="Selecione uma vaga"
         />
         </div>
         <div>
@@ -434,6 +433,11 @@ const DashboardScreen = () => {
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio Total</h1>
           <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
+        </StyledCard>
+        <StyledCard bordered>
+          <div className="card-bg"></div>
+          <h1 className="card-title">Retenção Média</h1>
+          <h2 className="card-date"><span>{retentions.length > 0 ?  Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
