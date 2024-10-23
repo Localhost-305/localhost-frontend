@@ -232,6 +232,132 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
+const MyChartComponent = () => {
+  const chartRefHist = useRef<HTMLDivElement | null>(null);
+  const [historicalData, setHistoricalData] = useState<number[][]>([]);
+  const [regressionData, setRegressionData] = useState<number[][]>([]);
+
+  // Mocking historical data and regression data
+  useEffect(() => {
+    // Mocking historical data
+    const mockHistoricalData = [
+      [1, 4862.4],
+      [2, 5294.7],
+      [3, 5934.5],
+      [4, 7171.0],
+      [5, 8964.4],
+      [6, 10202.2],
+      [7, 11962.5],
+      [8, 14928.3],
+      [9, 16909.2],
+      [10, 18547.9],
+      [11, 21617.8],
+      [12, 26638.1],
+      [13, 34634.4],
+      [14, 46759.4],
+      [15, 58478.1],
+      [16, 67884.6],
+      [17, 74462.6],
+      [18, 79395.7]
+    ];
+    
+    // Mocking regression data (for example, a linear fit)
+    const mockRegressionData = [
+      [1, 5000],
+      [2, 5400],
+      [3, 5800],
+      [4, 6200],
+      [5, 6700],
+      [6, 7200],
+      [7, 7800],
+      [8, 8500],
+      [9, 9000],
+      [10, 9500],
+      [11, 10200],
+      [12, 11000],
+      [13, 12000],
+      [14, 13000],
+      [15, 14000],
+      [16, 15000],
+      [17, 16000],
+      [18, 17000]
+    ];
+
+    setHistoricalData(mockHistoricalData);
+    setRegressionData(mockRegressionData);
+  }, []);
+
+  useEffect(() => {
+    if (!chartRefHist.current || !historicalData || !regressionData) return;
+
+    const chartDom = chartRefHist.current;
+    const myChart = echarts.init(chartDom);
+
+    const option = {
+      dataset: [
+        {
+          source: historicalData // Dados históricos
+        },
+        {
+          source: regressionData // Dados da regressão
+        }
+      ],
+      title: {
+        text: 'Gráfico com Dados Históricos e Regressão',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
+        }
+      },
+      xAxis: {
+        splitLine: {
+          lineStyle: {
+            type: 'dashed'
+          }
+        }
+      },
+      yAxis: {
+        splitLine: {
+          lineStyle: {
+            type: 'dashed'
+          }
+        }
+      },
+      series: [
+        {
+          name: 'Dados Históricos',
+          type: 'scatter',
+          datasetIndex: 0
+        },
+        {
+          name: 'Linha de Regressão',
+          type: 'line',
+          smooth: true,
+          datasetIndex: 1,
+          symbolSize: 0.1,
+          symbol: 'circle',
+          label: { show: true, fontSize: 16 },
+          labelLayout: { dx: -20 },
+          encode: { label: 2, tooltip: 1 }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+
+    return () => {
+      myChart.dispose();
+    };
+  }, [historicalData, regressionData]);
+
+  return (
+    <div ref={chartRefHist} style={{ height: '300px' }} />
+  );
+};
+
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
