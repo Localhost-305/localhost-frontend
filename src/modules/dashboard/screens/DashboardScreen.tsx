@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
-import { Radio, Select, Space } from 'antd';
-import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Select } from 'antd';
+import type { DatePickerProps, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
@@ -11,7 +11,8 @@ import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from '../../firstScreen';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DashboardRoutesEnum } from '../routes';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
@@ -33,7 +34,6 @@ import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConsta
 import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
-
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -79,6 +79,7 @@ const DashboardScreen = () => {
 
   const chartRef = useRef<HTMLDivElement>(null);
   const chartRefCosts = useRef<HTMLDivElement>(null);
+  const chartRefLine = useRef<HTMLDivElement>(null);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -232,6 +233,94 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
+
+  useEffect(() => {
+    if (chartRefLine.current) {
+    
+      const myChart = echarts.init(chartRefLine.current);
+
+      const option: EChartOption = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          }
+        },
+        xAxis: {
+          type: 'category',
+          name: 'Mês',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Custo',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        series: [
+          {
+            name: 'Histórico',
+            type: 'line',
+            datasetIndex: 0,
+            symbolSize: 7,
+            symbol: 'circle', 
+            itemStyle: {
+              color: 'blue' 
+            },
+            data: [
+              [1, 4862.4],
+              [2, 5294.7],
+              [3, 5934.5],
+              [4, 7171.0],
+              [5, 8964.4],
+              [6, 10202.2],
+              [7, 11962.5],
+              [8, 14928.3],
+              [9, 16909.2],
+              [10, 18547.9]
+            ]
+          },
+          {
+            name: 'Previsão',
+            type: 'line',
+            smooth: true,
+            datasetIndex: 1,
+            symbolSize: 7,
+            symbol: 'circle', 
+            itemStyle: {
+              color: 'orange' 
+            },
+            data: [
+              [1, 4762.4],
+              [2, 5094.7],
+              [3, 6934.5],
+              [4, 7001.0],
+              [5, 8664.4],
+              [6, 10002.2],
+              [7, 11862.5],
+              [8, 15928.3],
+              [9, 17009.2],
+              [10, 18555.9]
+            ]
+          }
+        ]
+      };
+
+      myChart.setOption(option);
+
+      return () => {
+        myChart.dispose();
+      };
+    }
+  }, []);
+  
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -249,7 +338,15 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-    const handleStartDateChange = (date: Dayjs | null) => {
+
+  dayjs.extend(customParseFormat);
+
+  const dateFormat = 'DD/MM/YYYY';
+
+  const customFormat: DatePickerProps['format'] = (value) =>
+    `custom format: ${value.format(dateFormat)}`;
+  
+  const handleStartDateChange = (date: Dayjs | null) => {
     setStartDateStr(date);
   };
 
@@ -380,16 +477,18 @@ const DashboardScreen = () => {
       <BoxButtons>
         <div>
           <DatePicker 
+            format={dateFormat}
             key={'startDate'} 
             onChange={handleStartDateChange} 
             placeholder="Data Inicial" 
-            style={{ marginRight: '10px' }} 
+            style={{ marginRight: '5px' }} 
           />
           <DatePicker 
+            format={dateFormat}
             key={'endDate'} 
             onChange={handleEndDateChange} 
             placeholder="Data Final" 
-            style={{ marginRight: '10px' }} 
+            style={{ marginRight: '5px' }} 
           />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
@@ -476,6 +575,11 @@ const DashboardScreen = () => {
           <h2>Custos Mensais de Contratação</h2>
           <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
           <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
+        </ScrollableDiv>
+        <ScrollableDiv>
+          <h2>Previsão e Histórico de Custos</h2>
+          <small>Neste gráfico mostra o histórico e a previsão dos custos</small>
+          <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
         </ScrollableDiv>
       </LimitedContainer>
       <Modal title={titleDoubt}
