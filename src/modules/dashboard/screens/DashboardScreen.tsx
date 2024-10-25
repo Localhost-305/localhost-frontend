@@ -6,7 +6,6 @@ import { Radio, Select, Space } from 'antd';
 import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
-import ecStat from 'echarts-stat';
 
 import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
@@ -35,6 +34,7 @@ import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
+import { transpose } from 'date-fns';
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -235,377 +235,393 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
-  // const DashboardScreen = () => {
 
-  //   const [histApplication, setHistApplication] = useState<HistApplicationType[]>([]);
-  //   const [filteredApplications, setFilteredApplications] = useState<HistApplicationType[]>([]);
-  //   const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  useEffect(() => {
+    if (chartRef.current) {
+      const chart = echarts.init(chartRefHist.current);
 
-    useEffect(() => {
-      if (chartRef.current) {
-        const chart = echarts.init(chartRefHist.current);
+      // Dados simulados (você pode buscar do backend)
+      const data = histApplication.map(item => [item.month, item.quantityApplications]);
 
-        // Dados simulados (você pode buscar do backend)
-        const data = histApplication.map(item => [item.month, item.quantityApplications]);
-
-        // Configuração do gráfico com regressão
-        const option: EChartOption = {
-          dataset: [
-            {
-              source: [
-                [1, 4862.4],
-                [2, 5294.7],
-                [3, 5934.5],
-                [4, 7171.0],
-                [5, 8964.4],
-                [6, 10202.2],
-                [7, 11962.5],
-                [8, 14928.3],
-                [9, 16909.2],
-                [10, 18547.9],
-                [11, 21617.8],
-                [12, 26638.1]
-              ] // Dados históricos
-            },
-          ],
-          title: {
-            text: 'Previsão de Candidaturas',
-            subtext: 'Histórico e Previsão',
-            left: 'center'
+      // Configuração do gráfico com regressão
+      const option: EChartOption = {
+        dataset: [
+          {
+            source: [
+              [1, 4862.4],
+              [2, 5294.7],
+              [3, 5934.5],
+              [4, 7171.0],
+              [5, 8964.4],
+              [6, 10202.2],
+              [7, 11962.5],
+              [8, 14928.3],
+              [9, 16909.2],
+              [10, 18547.9],
+              [11, 21617.8],
+              [12, 26638.1]
+            ] // Dados históricos
           },
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-              type: 'cross'
-            }
-          },
-          xAxis: {
-            type: 'category',
-            name: 'Mês',
-            splitLine: {
-              lineStyle: {
-                type: 'dashed'
-              }
-            }
-          },
-          yAxis: {
-            type: 'value',
-            name: 'Candidaturas',
-            splitLine: {
-              lineStyle: {
-                type: 'dashed'
-              }
-            }
-          },
-          series: [
-            {
-              name: 'Histórico',
-              type: 'scatter',
-              datasetIndex: 0,
-              itemStyle: {
-                color: 'blue' // Cor dos dados históricos
-              },
-              data: [
-                [1, 4862.4],
-                [2, 5294.7],
-                [3, 5934.5],
-                [4, 7171.0],
-                [5, 8964.4],
-                [6, 10202.2],
-                [7, 11962.5],
-                [8, 14928.3]
-              ]
-            },
-            {
-              name: 'Previsão',
-              type: 'line',
-              smooth: true,
-              datasetIndex: 1,
-              symbolSize: 0.1,
-              label: { show: true, fontSize: 12 },
-              itemStyle: {
-                color: 'red' // Cor dos dados previstos
-              },
-              data: [
-        [9, 16909.2],
-        [10, 18547.9],
-        [11, 21617.8],
-        [12, 26638.1]
-      ]
-            }
-          ]
-        };
-      
-        chart.setOption(option);
-
-        return () => {
-          chart.dispose(); // Limpar o gráfico ao desmontar o componente
-        };
-      }
-    }, [histApplication, selectedJob]);
-
-    // TABLES
-    const columns: TableColumnsType<JobsType> = [
-      {
-        title: 'Vaga',
-        dataIndex: 'JobTitle',
-      },
-      {
-        title: 'Tempo Médio',
-        dataIndex: 'AverageTime',
-        sorter: {
-          compare: (a, b) => a.AverageTime - b.AverageTime,
-          multiple: 3,
+        ],
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          }
         },
+        legend: {
+          data: ['Histórico', 'Previsão'],
+          bottom: '0', // Posiciona a legenda na parte inferior
+          textStyle: {
+            fontSize: 12
+          }
+        },
+        xAxis: {
+          type: 'category',
+          name: 'Mês',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Candidaturas',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        series: [
+          {
+            name: 'Histórico',
+            type: 'line',
+            datasetIndex: 0,
+            itemStyle: {
+              color: 'blue' // Cor dos dados históricos
+            },
+            data: [
+              [1, 4862.4],
+              [2, 5294.7],
+              [3, 5934.5],
+              [4, 7171.0],
+              [5, 8964.4],
+              [6, 10202.2],
+              [7, 11962.5],
+              [8, 14928.3]
+            ]
+          },
+          {
+            name: 'Previsão',
+            type: 'scatter',
+            smooth: true,
+            datasetIndex: 1,
+            symbolSize: 0.1,
+            label: { show: true, fontSize: 12 },
+            itemStyle: {
+              color: 'red' // Cor dos dados previstos
+            },
+            data: [
+              [9, 16909.2],
+              [10, 18547.9],
+              [11, 21617.8]
+            ]
+          }
+        ]
+      };
+
+      chart.setOption(option);
+
+      return () => {
+        chart.dispose(); // Limpar o gráfico ao desmontar o componente
+      };
+    }
+  }, [histApplication, selectedJob]);
+
+  // TABLES
+  const columns: TableColumnsType<JobsType> = [
+    {
+      title: 'Vaga',
+      dataIndex: 'JobTitle',
+    },
+    {
+      title: 'Tempo Médio',
+      dataIndex: 'AverageTime',
+      sorter: {
+        compare: (a, b) => a.AverageTime - b.AverageTime,
+        multiple: 3,
       },
-    ];
+    },
+  ];
 
-    // UTILS
-    const handleStartDateChange = (date: Dayjs | null) => {
-      setStartDateStr(date);
-    };
+  // UTILS
+  const handleStartDateChange = (date: Dayjs | null) => {
+    setStartDateStr(date);
+  };
 
-    const handleEndDateChange = (date: Dayjs | null) => {
-      setEndDateStr(date);
-    };
+  const handleEndDateChange = (date: Dayjs | null) => {
+    setEndDateStr(date);
+  };
 
-    const handleSearch = () => {
-      if (startDateStr && endDateStr) {
-        request(
-          `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
-          MethodsEnum.GET,
-          setJobsAverageAll);
-        request(
-          `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
-          MethodsEnum.GET,
-          setJobs);
-        request(`${URL_APPLICATIONS}/jobs?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
-          MethodsEnum.GET,
-          setCandidates);
-        request(`${URL_HIRING}/retention?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
-          MethodsEnum.GET,
-          setRetentions);
-        request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
-          MethodsEnum.GET,
-          setMonthlyCosts);
-      } else {
-        try {
-          request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
-          request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
-          request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
-          request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
-          request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
-        } catch (error) {
-          setNotification(String(error), NotificationEnum.ERROR);
-        } finally {
-          setLoading(false);
-        }
-      }
-    }
-
-    // MODAL DOUBTS
-    const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
-    const [contentDoubt, setContentDoubt] = useState<String>('');
-    const [titleDoubt, setTitleDoubt] = useState<String>('');
-
-    const showModalDoubts = (title: string, content: string) => {
-      setTitleDoubt(title);
-      setContentDoubt(content);
-      setIsModalDoubtsOpen(true);
-    }
-
-    // EXCEL
-    const handleBeforeUpload = (file: File) => {
-      const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
-
-      return isExcel || Upload.LIST_IGNORE;
-    };
-
-    // FILTRO
-
-    useEffect(() => {
-      setLoading(true);
+  const handleSearch = () => {
+    if (startDateStr && endDateStr) {
+      request(
+        `${URL_JOB}/jobAverageAll?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setJobsAverageAll);
+      request(
+        `${URL_JOB}/jobAverage?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setJobs);
+      request(`${URL_APPLICATIONS}/jobs?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setCandidates);
+      request(`${URL_HIRING}/retention?startDateStr=${startDateStr.format('YYYY-MM-DD')}&endDateStr=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setRetentions);
+      request(`${URL_HIRING}/cost?startDate=${startDateStr.format('YYYY-MM-DD')}&endDate=${endDateStr.format('YYYY-MM-DD')}`,
+        MethodsEnum.GET,
+        setMonthlyCosts);
+    } else {
       try {
-        request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
-          setCandidate(data);
-          const jobOptions = data.map((item: CandidateType) => ({
-            value: item.jobTitle,
-            label: item.jobTitle
-          }));
-          setOptions(jobOptions);
-        });
+        request(`${URL_APPLICATIONS}/jobs`, MethodsEnum.GET, setCandidates);
+        request(`${URL_HIRING}/retention`, MethodsEnum.GET, setRetentions);
+        request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
+        request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
+        request(`${URL_HIRING}/cost`, MethodsEnum.GET, setMonthlyCosts);
       } catch (error) {
         setNotification(String(error), NotificationEnum.ERROR);
       } finally {
         setLoading(false);
       }
-    }, []);
+    }
+  }
 
+  // MODAL DOUBTS
+  const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
+  const [contentDoubt, setContentDoubt] = useState<String>('');
+  const [titleDoubt, setTitleDoubt] = useState<String>('');
 
-    const handleJobChange = (value: string) => {
-      setSelectedJob(value);
+  const showModalDoubts = (title: string, content: string) => {
+    setTitleDoubt(title);
+    setContentDoubt(content);
+    setIsModalDoubtsOpen(true);
+  }
 
-      const filteredCandidate = candidate.filter(candidate => candidate.jobTitle === value);
-      setCandidate(filteredCandidate);
-    };
+  // EXCEL
+  const handleBeforeUpload = (file: File) => {
+    const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
 
-    const filteredJobs = selectedJob
-      ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
-      : jobs;
-
-    const handleChange = (value: string | string[]) => {
-      console.log(`Selected: ${value}`);
-    };
-
-    const handleUpload = async () => {
-      if (fileList.length === 0) {
-        setNotification("Por favor, envie um arquivo primeiro!", NotificationEnum.ERROR);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", fileList[0].originFileObj);
-
-      try {
-        const response = await axios.post("http://localhost:9090/excel/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
-          },
-        });
-        setNotification("Arquivo enviado com sucesso!", NotificationEnum.SUCCESS);
-      } catch (error) {
-        setNotification("Erro ao enviar o arquivo!", NotificationEnum.ERROR);
-        console.error("Upload Error:", error);
-      }
-    };
-
-    const onChange = (info: any) => {
-      setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
-    };
-
-    return (
-      <Screen listBreadcrumb={listBreadcrumb}>
-        {isLoading && <FirstScreen />}
-        <h1>Dashboard dos Dados de Contratação</h1>
-        <BoxButtons>
-          <div>
-            <DatePicker
-              key={'startDate'}
-              onChange={handleStartDateChange}
-              placeholder="Data Inicial"
-              style={{ marginRight: '10px' }}
-            />
-            <DatePicker
-              key={'endDate'}
-              onChange={handleEndDateChange}
-              placeholder="Data Final"
-              style={{ marginRight: '10px' }}
-            />
-            <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
-              onClick={handleSearch} />
-          </div>
-          <div>
-            <Select
-              defaultValue={null}
-              onChange={handleJobChange}
-              style={{ width: 200 }}
-              options={options}
-              placeholder="Selecione uma vaga"
-            />
-          </div>
-          <div>
-            <Upload
-              accept=".xlsx"
-              beforeUpload={handleBeforeUpload}
-              fileList={fileList}
-              onChange={onChange}
-              maxCount={1}>
-              <Button icon={<UploadOutlined />}>Selecionar Arquivo Excel</Button>
-            </Upload>
-          </div>
-          <div>
-            <Button type="primary" onClick={handleUpload}>
-              Enviar Arquivo
-            </Button>
-          </div>
-        </BoxButtons>
-        <ContainerRowResponsive maxWidth={'800px'}>
-          <ResponsiveTable
-            columns={columns as any}
-            className="table-responsive"
-            dataSource={filteredJobs}
-            bordered
-            pagination={{ pageSize: 5 }}
-            rowKey={(doc: any) => doc.JobTitle}
-            components={{
-              header: {
-                cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                  <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                    {props.children}
-                  </th>
-                ),
-              },
-            }}
-          />
-          <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-            <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
-              onClick={() =>
-                showModalDoubts('Tempo médio de contratação por cargo',
-                  'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
-          </Tooltip>
-          <StyledCard bordered>
-            <div className="card-bg"></div>
-            <h1 className="card-title">Tempo Médio Total</h1>
-            <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
-          </StyledCard>
-          <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
-            <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
-              onClick={() =>
-                showModalDoubts('Tempo médio total',
-                  'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos. Filtro de vaga não é aplicado ao Cartão. ')} />
-          </Tooltip>
-          <StyledCard bordered>
-            <div className="card-bg"></div>
-            <h1 className="card-title">Retenção Média</h1>
-            <h2 className="card-date"><span>{retentions.length > 0 ? Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
-          </StyledCard>
-          <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
-            <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
-              onClick={() =>
-                showModalDoubts('Retenção Média',
-                  'Neste cartão mostra a retenção média. ')} />
-          </Tooltip>
-        </ContainerRowResponsive>
-        <LimitedContainer width={1200}>
-          <h2>Quantidade de Candidaturas por Cargo</h2>
-          <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
-          <ScrollableDiv>
-            <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
-          </ScrollableDiv>
-          <ScrollableDiv>
-            <h2>Custos Mensais de Contratação</h2>
-            <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
-            <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
-          </ScrollableDiv>
-          <ScrollableDiv>
-            <h2>Histórico de Candidaturas e Previsão</h2>
-            <small>
-              Este gráfico exibe o histórico de candidaturas em azul e a previsão dos próximos meses em vermelho.
-              A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.
-            </small>
-            <div style={{ width: '100%', height: '300px' }} ref={chartRefHist} />
-          </ScrollableDiv>
-        </LimitedContainer>
-        <Modal title={titleDoubt}
-          open={isModalDoubtsOpen}
-          onOk={() => setIsModalDoubtsOpen(false)}
-          onCancel={() => setIsModalDoubtsOpen(false)}>
-          <p>{contentDoubt}</p>
-        </Modal>
-      </Screen>
-    )
+    return isExcel || Upload.LIST_IGNORE;
   };
+
+  // FILTRO
+
+  useEffect(() => {
+    setLoading(true);
+    try {
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
+        setCandidate(data);
+        const jobOptions = data.map((item: CandidateType) => ({
+          value: item.jobTitle,
+          label: item.jobTitle
+        }));
+        setOptions(jobOptions);
+      });
+    } catch (error) {
+      setNotification(String(error), NotificationEnum.ERROR);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+  const handleJobChange = (value: string) => {
+    setSelectedJob(value);
+
+    const filteredCandidate = candidate.filter(candidate => candidate.jobTitle === value);
+    setCandidate(filteredCandidate);
+  };
+
+  const filteredJobs = selectedJob
+    ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
+    : jobs;
+
+  const handleChange = (value: string | string[]) => {
+    console.log(`Selected: ${value}`);
+  };
+
+  const handleUpload = async () => {
+    if (fileList.length === 0) {
+      setNotification("Por favor, envie um arquivo primeiro!", NotificationEnum.ERROR);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileList[0].originFileObj);
+
+    try {
+      const response = await axios.post("http://localhost:9090/excel/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
+        },
+      });
+      setNotification("Arquivo enviado com sucesso!", NotificationEnum.SUCCESS);
+    } catch (error) {
+      setNotification("Erro ao enviar o arquivo!", NotificationEnum.ERROR);
+      console.error("Upload Error:", error);
+    }
+  };
+
+  const onChange = (info: any) => {
+    setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
+  };
+
+  return (
+    <Screen listBreadcrumb={listBreadcrumb}>
+      {isLoading && <FirstScreen />}
+      <h1>Dashboard dos Dados de Contratação</h1>
+      <BoxButtons>
+        <div>
+          <DatePicker
+            key={'startDate'}
+            onChange={handleStartDateChange}
+            placeholder="Data Inicial"
+            style={{ marginRight: '10px' }}
+          />
+          <DatePicker
+            key={'endDate'}
+            onChange={handleEndDateChange}
+            placeholder="Data Final"
+            style={{ marginRight: '10px' }}
+          />
+          <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
+            onClick={handleSearch} />
+        </div>
+        <div>
+          <Select
+            defaultValue={null}
+            onChange={handleJobChange}
+            style={{ width: 200 }}
+            options={options}
+            placeholder="Selecione uma vaga"
+          />
+        </div>
+        <div>
+          <Upload
+            accept=".xlsx"
+            beforeUpload={handleBeforeUpload}
+            fileList={fileList}
+            onChange={onChange}
+            maxCount={1}>
+            <Button icon={<UploadOutlined />}>Selecionar Arquivo Excel</Button>
+          </Upload>
+        </div>
+        <div>
+          <Button type="primary" onClick={handleUpload}>
+            Enviar Arquivo
+          </Button>
+        </div>
+      </BoxButtons>
+      <ContainerRowResponsive maxWidth={'800px'}>
+        <ResponsiveTable
+          columns={columns as any}
+          className="table-responsive"
+          dataSource={filteredJobs}
+          bordered
+          pagination={{ pageSize: 5 }}
+          rowKey={(doc: any) => doc.JobTitle}
+          components={{
+            header: {
+              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                  {props.children}
+                </th>
+              ),
+            },
+          }}
+        />
+        <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio de contratação por cargo',
+                'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
+        </Tooltip>
+        <StyledCard bordered>
+          <div className="card-bg"></div>
+          <h1 className="card-title">Tempo Médio Total</h1>
+          <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
+        </StyledCard>
+        <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
+            onClick={() =>
+              showModalDoubts('Tempo médio total',
+                'Neste cartão mostra o tempo médio de contratação geral considerando a hora de abertura e a hora de encerramento, dos cargos. Filtro de vaga não é aplicado ao Cartão. ')} />
+        </Tooltip>
+        <StyledCard bordered>
+          <div className="card-bg"></div>
+          <h1 className="card-title">Retenção Média</h1>
+          <h2 className="card-date"><span>{retentions.length > 0 ? Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
+        </StyledCard>
+        <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
+          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
+            onClick={() =>
+              showModalDoubts('Retenção Média',
+                'Neste cartão mostra a retenção média. ')} />
+        </Tooltip>
+      </ContainerRowResponsive>
+      <LimitedContainer width={1200}>
+        <h2>Quantidade de Candidaturas por Cargo</h2>
+        <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
+        <ScrollableDiv>
+          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+        </ScrollableDiv>
+        <ScrollableDiv>
+          <h2>Custos Mensais de Contratação</h2>
+          <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
+          <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
+        </ScrollableDiv>
+        <ScrollableDiv>
+          <h2>Histórico de Candidaturas e Previsão</h2>
+          <small>
+            Este gráfico exibe o histórico de candidaturas em azul e a previsão dos próximos meses em vermelho.
+            A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.
+          </small>
+          {/* Select para profundidade de análise */}
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+            <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
+            <select 
+              id="analysisDepth" 
+              style={{ padding: '6px 12px',
+                borderRadius: '8px', // Bordas arredondadas
+                border: '1px solid #ccc', // Cor da borda
+                outline: 'none',
+                fontSize: '14px',
+                cursor: 'pointer',
+                backgroundColor: '#f9f9f9' // Cor de fundo suave 
+              }}>
+              <option value="3">3 meses</option>
+              <option value="6">6 meses</option>
+              <option value="12">12 meses</option>
+              <option value="24">24 meses</option>
+            </select>
+          </div>
+
+          <div style={{ width: '100%', height: '400px' }} ref={chartRefHist} />
+        </ScrollableDiv>
+      </LimitedContainer>
+      <Modal title={titleDoubt}
+        open={isModalDoubtsOpen}
+        onOk={() => setIsModalDoubtsOpen(false)}
+        onCancel={() => setIsModalDoubtsOpen(false)}>
+        <p>{contentDoubt}</p>
+      </Modal>
+    </Screen>
+  )
+};
 
 export default DashboardScreen;
