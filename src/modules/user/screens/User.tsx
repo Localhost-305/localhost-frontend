@@ -16,34 +16,8 @@ import { formatDateTime } from "../../../shared/functions/utils/date";
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-
-
-const columns: TableProps<UserType>['columns'] = [
-    {
-        title: 'Nome',
-        dataIndex: 'name',
-        key: 'name',
-        render: (_,user) => <p>{`${user.name}`}</p>,
-    },
-    {
-        title: 'Email',
-        dataIndex: 'email',
-        key: 'email',
-        render: (text) => <p>{text}</p>,
-    },
-    {
-        title: 'UF',
-        dataIndex: 'uf',
-        key: 'uf',
-        render: (text) => <p>{text}</p>,
-    },
-    {
-        title: 'Criado em',
-        dataIndex: 'created_on',
-        key: 'created_on',
-        render: (_,user) => <p>{formatDateTime(user.created_on)}</p>,
-    }
-];
+import { DashboardRoutesEnum } from "../../dashboard/routes";
+import { StyledButton } from "../../../shared/components/styles/styledButton.style";
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -64,11 +38,12 @@ const User = () => {
     // BREADCRUMB
     const listBreadcrumb = [
         {
-            name: 'Home',
-            navigateTo: UserRoutesEnum.USER
+            name: 'Dashboard',
+            navigateTo: DashboardRoutesEnum.DASHBOARD
         },
         {
-            name: 'Lista de Usuários'
+            name: 'Lista de Usuários',
+            navigateTo: UserRoutesEnum.USER
         }
     ]
 
@@ -77,6 +52,42 @@ const User = () => {
     const handleInsert = () => {
         navigate(UserRoutesEnum.USER_INSERT);
     }
+
+    const columns: TableProps<UserType>['columns'] = [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
+            render: (text) => <p>{text}</p>,
+        },
+        {
+            title: 'Nome',
+            dataIndex: 'name',
+            key: 'name',
+            render: (_,user) => <p>{`${user.name}`}</p>,
+        },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email',
+            render: (text) => <p>{text}</p>,
+        },
+        {
+            title: 'Cargo',
+            dataIndex: 'function',
+            key: 'function',
+            render: (text) => <p>{text}</p>,
+        },
+        {
+            title: 'Editar',
+            key: 'edit',
+            render: () => (
+                <StyledButton type="button" id="edit" onClick={handleInsert}>
+                    Editar
+                </StyledButton>
+            ),
+        }
+    ];
 
     // Search ANTD
     const [ objectFiltered, setObjectFiltered ] = useState<UserType[]>([]);
@@ -89,9 +100,6 @@ const User = () => {
         } else {
             const filteredObjects = user.filter((object) => {
                 const fieldValue = (object as any)[filterColumn];
-                if (filterColumn === 'created_on'){
-                    return formatDateTime(fieldValue).includes(value);
-                }
                 if (filterColumn === 'name'){
                     return `${object.name}`.toLowerCase().includes(value.toLowerCase());
                 }
@@ -118,12 +126,9 @@ const User = () => {
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
                         <Option value="name">Nome</Option>
                         <Option value="email">E-mail</Option>
-                        <Option value="created_on">Criado em</Option>
+                        <Option value="function">Cargo</Option>
                     </Select>
                     <Search placeholder="Pesquisar" onSearch={onSearch} enterButton/>
-                </LimitedContainer>
-                <LimitedContainer width={120}>
-                    <Button type="button" id="insert" text="Inserir" onClick={handleInsert}/>
                 </LimitedContainer>
             </BoxButtons>
             <Table columns={columns} dataSource={objectFiltered} rowKey={(objectFiltered) => objectFiltered.id} scroll={{y:550, x:1000}}/>

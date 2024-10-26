@@ -10,6 +10,10 @@ const Menu = () => {
       label: 'Dashboard',
       key: 'Dashboard',
     },
+    {
+      label: 'Usuários',
+      key: 'Users',
+    },
   ];
 
   const onClick: MenuProps['onClick'] = (e) => {
