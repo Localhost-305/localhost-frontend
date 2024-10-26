@@ -236,33 +236,52 @@ const DashboardScreen = () => {
   }, [monthlyCosts]);
 
 
+  const [analysisDepth, setAnalysisDepth] = useState<number>(3);
+
   useEffect(() => {
     if (chartRef.current) {
       const chart = echarts.init(chartRefHist.current);
 
-      // Dados simulados (você pode buscar do backend)
-      const data = histApplication.map(item => [item.month, item.quantityApplications]);
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+
+      // const currentMonth = 2; // Março (0 = Janeiro)
+      // const currentYear = 2025;
+
+      const generateRealMonths = (depth:number) => {
+        const months = [];
+        for (let i = depth - 1; i >= 0; i--) {
+          const date = new Date(currentYear, currentMonth - i);
+          const month = date.getMonth() + 1;
+          const year = date.getFullYear();
+          months.push(`${[month]}-${year}`);
+        }
+        return months;
+      };
+
+      const generateForecastMonths = () => {
+        const months = [];
+        for (let i = 0; i <= 3; i++) {
+          const date = new Date(currentYear, currentMonth + i);
+          const month = date.getMonth() + 1;
+          const year = date.getFullYear();
+          months.push(`${[month]}-${year}`);
+        }
+        return months;
+      };
+
+      // Dados históricos e previsão simulados
+      const realMonths = generateRealMonths(analysisDepth);
+      const realData = Array.from({ length: analysisDepth }, () => Math.floor(Math.random() * 10000) + 1000); // Mock dos valores
+      const forecastMonths = generateForecastMonths();
+      const forecastData = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10000) + 1000); // Mock dos valores
+
+
+      const allMonths = [...realMonths, ...forecastMonths];
 
       // Configuração do gráfico com regressão
       const option: EChartOption = {
-        dataset: [
-          {
-            source: [
-              [1, 4862.4],
-              [2, 5294.7],
-              [3, 5934.5],
-              [4, 7171.0],
-              [5, 8964.4],
-              [6, 10202.2],
-              [7, 11962.5],
-              [8, 14928.3],
-              [9, 16909.2],
-              [10, 18547.9],
-              [11, 21617.8],
-              [12, 26638.1]
-            ] // Dados históricos
-          },
-        ],
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -279,6 +298,7 @@ const DashboardScreen = () => {
         xAxis: {
           type: 'category',
           name: 'Mês',
+          data: allMonths,
           splitLine: {
             lineStyle: {
               type: 'dashed'
@@ -298,37 +318,24 @@ const DashboardScreen = () => {
           {
             name: 'Histórico',
             type: 'line',
+            data: realData,
             datasetIndex: 0,
             itemStyle: {
               color: 'blue' // Cor dos dados históricos
-            },
-            data: [
-              [1, 4862.4],
-              [2, 5294.7],
-              [3, 5934.5],
-              [4, 7171.0],
-              [5, 8964.4],
-              [6, 10202.2],
-              [7, 11962.5],
-              [8, 14928.3]
-            ]
+            }
           },
-          {
-            name: 'Previsão',
-            type: 'scatter',
-            smooth: true,
-            datasetIndex: 1,
-            symbolSize: 0.1,
-            label: { show: true, fontSize: 12 },
-            itemStyle: {
-              color: 'red' // Cor dos dados previstos
-            },
-            data: [
-              [9, 16909.2],
-              [10, 18547.9],
-              [11, 21617.8]
-            ]
-          }
+          // {
+          //   name: 'Previsão',
+          //   type: 'scatter',
+          //   smooth: true,
+          //   data: forecastData,
+          //   // datasetIndex: 1,
+          //   symbolSize: 10,
+          //   label: { show: true, fontSize: 12 },
+          //   itemStyle: {
+          //     color: 'red' // Cor dos dados previstos
+          //   },
+          // }
         ]
       };
 
@@ -338,8 +345,8 @@ const DashboardScreen = () => {
         chart.dispose(); // Limpar o gráfico ao desmontar o componente
       };
     }
-  }, [histApplication, selectedJob]);
-
+  }, [analysisDepth]);
+  
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -594,9 +601,12 @@ const DashboardScreen = () => {
           {/* Select para profundidade de análise */}
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
             <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
-            <select 
-              id="analysisDepth" 
-              style={{ padding: '6px 12px',
+            <select
+              id="analysisDepth"
+              value={analysisDepth}
+              onChange={(e) => setAnalysisDepth(Number(e.target.value))}
+              style={{
+                padding: '6px 12px',
                 borderRadius: '8px', // Bordas arredondadas
                 border: '1px solid #ccc', // Cor da borda
                 outline: 'none',
@@ -604,10 +614,10 @@ const DashboardScreen = () => {
                 cursor: 'pointer',
                 backgroundColor: '#f9f9f9' // Cor de fundo suave 
               }}>
-              <option value="3">3 meses</option>
-              <option value="6">6 meses</option>
-              <option value="12">12 meses</option>
-              <option value="24">24 meses</option>
+              <option value={3}>3 meses</option>
+              <option value={6}>6 meses</option>
+              <option value={12}>12 meses</option>
+              <option value={24}>24 meses</option>
             </select>
           </div>
 
