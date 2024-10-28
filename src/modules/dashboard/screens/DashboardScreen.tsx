@@ -251,7 +251,7 @@ const DashboardScreen = () => {
 
       const generateRealMonths = (depth:number) => {
         const months = [];
-        for (let i = depth - 1; i >= 0; i--) {
+        for (let i = depth; i >= 0; i--) {
           const date = new Date(currentYear, currentMonth - i);
           const month = date.getMonth() + 1;
           const year = date.getFullYear();
@@ -262,7 +262,7 @@ const DashboardScreen = () => {
 
       const generateForecastMonths = () => {
         const months = [];
-        for (let i = 0; i <= 3; i++) {
+        for (let i = 1; i < 3; i++) {
           const date = new Date(currentYear, currentMonth + i);
           const month = date.getMonth() + 1;
           const year = date.getFullYear();
@@ -324,18 +324,18 @@ const DashboardScreen = () => {
               color: 'blue' // Cor dos dados históricos
             }
           },
-          // {
-          //   name: 'Previsão',
-          //   type: 'scatter',
-          //   smooth: true,
-          //   data: forecastData,
-          //   // datasetIndex: 1,
-          //   symbolSize: 10,
-          //   label: { show: true, fontSize: 12 },
-          //   itemStyle: {
-          //     color: 'red' // Cor dos dados previstos
-          //   },
-          // }
+          {
+            name: 'Previsão',
+            type: 'scatter',
+            smooth: true,
+            data: forecastData,
+            // datasetIndex: 1,
+            symbolSize: 10,
+            label: { show: true, fontSize: 12 },
+            itemStyle: {
+              color: 'red' // Cor dos dados previstos
+            },
+          }
         ]
       };
 
