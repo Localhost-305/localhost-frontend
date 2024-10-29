@@ -40,7 +40,7 @@ const User = () => {
     // BREADCRUMB
     const listBreadcrumb = [
         {
-            name: 'Dashboard',
+            name: 'Home',
             navigateTo: DashboardRoutesEnum.DASHBOARD
         },
         {
@@ -137,7 +137,7 @@ const User = () => {
                 className="table-user"
                 dataSource={objectFiltered} 
                 rowKey={(objectFiltered) => objectFiltered.id}
-                scroll={{y:550, x:1000}}
+                scroll={{y:550, x:900}}
                 bordered
                 pagination={{ pageSize: 5 }}
                 components={{

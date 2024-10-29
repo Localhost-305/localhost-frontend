@@ -7,8 +7,8 @@ const Menu = () => {
   const [current, setCurrent] = useState('Home');
   const items: MenuProps['items'] = [
     {
-      label: 'Dashboard',
-      key: 'Dashboard',
+      label: 'Home',
+      key: 'Home',
     },
     {
       label: 'Usuários',

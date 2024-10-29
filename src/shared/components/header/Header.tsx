@@ -59,7 +59,7 @@ const Header = () => {
                 <StyledMenu>
                     <Container>
                         <Nav className="me-auto">
-                        <Nav.Link as={Link} to={DashboardRoutesEnum.DASHBOARD}> Dashboard </Nav.Link>
+                        <Nav.Link as={Link} to={DashboardRoutesEnum.DASHBOARD}> Home </Nav.Link>
                         <Nav.Link as={Link} to={UserRoutesEnum.USER}> Usuários </Nav.Link>
                         </Nav>
                     </Container>
