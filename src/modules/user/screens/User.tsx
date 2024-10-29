@@ -13,11 +13,13 @@ import { URL_USER } from "../../../shared/constants/urls";
 import { MethodsEnum } from "../../../shared/enums/methods.enum";
 import { UserRoutesEnum } from "../routes";
 import { formatDateTime } from "../../../shared/functions/utils/date";
+import { UserTable } from '../../../shared/components/styles/userTable.style';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { StyledButton } from "../../../shared/components/styles/styledButton.style";
+import { EditTwoTone } from "@ant-design/icons";
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -58,6 +60,7 @@ const User = () => {
             title: 'ID',
             dataIndex: 'id',
             key: 'id',
+            width: 80,
             render: (text) => <p>{text}</p>,
         },
         {
@@ -79,12 +82,11 @@ const User = () => {
             render: (text) => <p>{text}</p>,
         },
         {
-            title: 'Editar',
-            key: 'edit',
+            title: 'Ações',
+            key: 'action',
+            width: 80,
             render: () => (
-                <StyledButton type="button" id="edit" onClick={handleInsert}>
-                    Editar
-                </StyledButton>
+                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={handleInsert} />
             ),
         }
     ];
@@ -120,7 +122,6 @@ const User = () => {
     return(
         <Screen listBreadcrumb={listBreadcrumb}> 
             {isLoading && <FirstScreen/>}
-            
             <BoxButtons>
                 <LimitedContainer width={240}>
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
@@ -128,10 +129,27 @@ const User = () => {
                         <Option value="email">E-mail</Option>
                         <Option value="function">Cargo</Option>
                     </Select>
-                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton/>
+                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }}/>
                 </LimitedContainer>
             </BoxButtons>
-            <Table columns={columns} dataSource={objectFiltered} rowKey={(objectFiltered) => objectFiltered.id} scroll={{y:550, x:1000}}/>
+            <UserTable
+                columns={columns as any} 
+                className="table-user"
+                dataSource={objectFiltered} 
+                rowKey={(objectFiltered) => objectFiltered.id}
+                scroll={{y:550, x:1000}}
+                bordered
+                pagination={{ pageSize: 5 }}
+                components={{
+                    header: {
+                    cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                        <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                        {props.children}
+                        </th>
+                    ),
+                    },
+                }}
+            />
         </Screen>
     )
 }
