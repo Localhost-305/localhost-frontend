@@ -29,10 +29,16 @@ const User = () => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [jobTitle, setJobTitle] = useState("");
 
     // MODAL
     const showEditModal = (user: UserType) => {
         setSelectedUser(user);
+        setName(user.name);
+        setEmail(user.email);
+        setJobTitle(user.jobTitle);
         setIsModalVisible(true);
     };
 
@@ -43,6 +49,7 @@ const User = () => {
 
      const handleSaveChanges = () => {
         handleCloseModal();
+        console.log("Dados atualizados:", { id: selectedUser?.id, name, email, jobTitle });
     };
 
     // EVENTS
@@ -170,7 +177,7 @@ const User = () => {
                 }}
             />
             <Modal
-                title="Usuário"
+                title="Dados do Usuário"
                 visible={isModalVisible}
                 onCancel={handleCloseModal}
                 footer={[
@@ -181,9 +188,14 @@ const User = () => {
                 {selectedUser && (
                     <div>
                         <p><strong>ID:</strong> {selectedUser.id}</p>
-                        <p><strong>Nome:</strong> {selectedUser.name}</p>
-                        <p><strong>Email:</strong> {selectedUser.email}</p>
-                        <p><strong>Cargo:</strong> {selectedUser.jobTitle}</p>
+                        <label><strong>Nome:</strong></label>
+                        <InputAntd value={name} onChange={(e) => setName(e.target.value)} />
+
+                        <label><strong>Email:</strong></label>
+                        <InputAntd value={email} onChange={(e) => setEmail(e.target.value)} />
+
+                        <label><strong>Cargo:</strong></label>
+                        <InputAntd value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
                     </div>
                 )}
             </Modal>
