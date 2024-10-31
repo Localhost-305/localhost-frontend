@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TableProps, Select, Input as InputAntd } from "antd";
+import { TableProps, Select, Input as InputAntd, Modal } from "antd";
 
 import Screen from "../../../shared/components/screen/Screen";
 import Table from "../../../shared/components/table/Table";
@@ -19,12 +19,31 @@ import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { StyledButton } from "../../../shared/components/styles/styledButton.style";
+import { Button as AntdButton } from "antd";
 import { EditTwoTone } from "@ant-design/icons";
 
 const User = () => {
     const {user, setUser} = useUserReducer();
     const {request} = useRequests();
     const { isLoading, setLoading } = useLoading();
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+
+    // MODAL
+    const showEditModal = (user: UserType) => {
+        setSelectedUser(user);
+        setIsModalVisible(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalVisible(false);
+        setSelectedUser(null);
+    };
+
+     const handleSaveChanges = () => {
+        handleCloseModal();
+    };
 
     // EVENTS
     useEffect(() => {
@@ -77,16 +96,16 @@ const User = () => {
         },
         {
             title: 'Cargo',
-            dataIndex: 'function',
-            key: 'function',
+            dataIndex: 'jobTitle',
+            key: 'jobTitle',
             render: (text) => <p>{text}</p>,
         },
         {
             title: 'Ações',
             key: 'action',
             width: 80,
-            render: () => (
-                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={handleInsert} />
+            render: (_, user) => (
+                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={() => showEditModal(user)} />
             ),
         }
     ];
@@ -150,6 +169,24 @@ const User = () => {
                     },
                 }}
             />
+            <Modal
+                title="Usuário"
+                visible={isModalVisible}
+                onCancel={handleCloseModal}
+                footer={[
+                    <AntdButton key="cancel" onClick={handleCloseModal}>Cancelar</AntdButton>,
+                    <AntdButton key="submit" type="primary" onClick={handleSaveChanges}>Salvar</AntdButton>,
+                ]}
+                >
+                {selectedUser && (
+                    <div>
+                        <p><strong>ID:</strong> {selectedUser.id}</p>
+                        <p><strong>Nome:</strong> {selectedUser.name}</p>
+                        <p><strong>Email:</strong> {selectedUser.email}</p>
+                        <p><strong>Cargo:</strong> {selectedUser.jobTitle}</p>
+                    </div>
+                )}
+            </Modal>
         </Screen>
     )
 }
