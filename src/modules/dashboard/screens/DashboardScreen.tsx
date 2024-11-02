@@ -5,7 +5,7 @@ import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } f
 import { Radio, Select, Space } from 'antd';
 import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
-import axios from "axios";
+import axios, { all } from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
@@ -244,52 +244,21 @@ const DashboardScreen = () => {
   }, [monthlyCosts]);
 
   useEffect(() => {
-    if (chartRef.current) {
+    if (chartRefHist.current) {
       const chart = echarts.init(chartRefHist.current);
 
-      // Pegando o mês e ano atual
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
+      // Dados completos vindos do back-end
+      const allData = histApplication.map(item => item.quantityApplications);
+      const allMonths = histApplication.map(item => `${item.month}-${item.year}`);
 
-      // const currentMonth = 2; // Março (0 = Janeiro)
-      // const currentYear = 2025;
+      const historicalData = allData.map((value, index) =>
+        index < allData.length - 3 ? value : NaN
+      );
 
-      const realData = histApplication
-        .slice(0, analysisDepth + 1)
-        .map(item => item.quantityApplications);
-      const forecastData = histApplication
-        .slice(analysisDepth + 1)
-        .map(item => item.quantityApplications);
-
-      const generateRealMonths = (depth: number) => {
-        const months = [];
-        for (let i = depth; i >= 0; i--) {
-          const date = new Date(currentYear, currentMonth - i);
-          const month = date.getMonth() + 1;
-          const year = date.getFullYear();
-          months.push(`${[month]}-${year}`);
-        }
-        return months;
-      };
-
-      const generateForecastMonths = () => {
-        const months = [];
-        for (let i = 1; i < 4; i++) {
-          const date = new Date(currentYear, currentMonth + i);
-          const month = date.getMonth() + 1;
-          const year = date.getFullYear();
-          months.push(`${[month]}-${year}`);
-        }
-        return months;
-      };
-
-      // Dados históricos e previsão simulados
-      const realMonths = generateRealMonths(analysisDepth);
-      const forecastMonths = generateForecastMonths();
-
-      const allMonths = [...realMonths, ...forecastMonths];
-
+      const forecastData = allData.map((value, index) =>
+        index >= allData.length - 3 ? value : NaN
+      );
+      
       // Configuração do gráfico com regressão
       const option: EChartOption = {
         tooltip: {
@@ -328,22 +297,32 @@ const DashboardScreen = () => {
           {
             name: 'Histórico',
             type: 'line',
-            data: realData,
-            datasetIndex: 0,
+            data: historicalData,
             itemStyle: {
               color: 'blue' // Cor dos dados históricos
+            },
+            label: {
+              show: true,
+              fontSize: 13.5,
+              color: 'blue',
+              position: 'top',
+              offset: [0, -8]
             }
           },
           {
-            name: 'Previsão',
-            type: 'scatter',
-            smooth: true,
-            data: forecastData,
-            // datasetIndex: 1,
+            name: 'Previsão', // Nome da série
+            type: 'scatter', // Tipo scatter para bolinhas
+            data: forecastData, // Dados dos últimos três meses
             symbolSize: 10,
-            label: { show: true, fontSize: 12 },
+            label: { 
+              show: true, 
+              fontSize: 13.5,
+              color: 'red',
+              position: 'top',
+              offset: [0, -8]
+            },
             itemStyle: {
-              color: 'red' // Cor dos dados previstos
+              color: 'red' // Cor das bolinhas
             },
           }
         ]
@@ -355,18 +334,18 @@ const DashboardScreen = () => {
         chart.dispose(); // Limpar o gráfico ao desmontar o componente
       };
     }
-  }, [analysisDepth, histApplication]);
+  }, [analysisDepth, histApplication, selectedJob]);
 
   useEffect(() => {
     setLoading(true);
     try {
       request(`${URL_QUANTITYAPPLICATIONS}/months/${analysisDepth}`, MethodsEnum.GET, setHistApplication);
-    }catch(error){
+    } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
-    }finally{
+    } finally {
       setLoading(false)
     }
-  },[analysisDepth])
+  }, [analysisDepth])
 
   console.log(histApplication);
 
