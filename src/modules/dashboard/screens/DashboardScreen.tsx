@@ -35,7 +35,7 @@ import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 
 
-const DashboardScreen = () => {
+const  DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
@@ -457,8 +457,10 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{retentions.length > 0 ?  Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
-        </StyledCard>
+          <h2 className="card-date">
+            <span>{retentions ? `${retentions} dias` : '0 dias'}</span>
+          </h2>
+          </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
               onClick={() => 
