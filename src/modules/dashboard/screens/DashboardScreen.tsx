@@ -20,7 +20,7 @@ import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_HIRING, URL_JOB, URL_QUANTITYAPPLICATIONS } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -39,13 +39,13 @@ import { transpose } from 'date-fns';
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
+  const { isLoading, setLoading } = useLoading();
+  const { RangePicker } = DatePicker;
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
   const [jobs, setJobs] = useState<JobsType[]>([]);
   const [candidates, setCandidates] = useState<CandidatesType[]>([]);
   const [candidate, setCandidate] = useState<CandidateType[]>([]);
   const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
-  const { isLoading, setLoading } = useLoading();
-  const { RangePicker } = DatePicker;
   const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
   const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
   const [fileList, setFileList] = useState<any[]>([]);
@@ -53,6 +53,17 @@ const DashboardScreen = () => {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [options, setOptions] = useState<SelectProps['options']>([]);
   const [histApplication, setHistApplication] = useState<HistApplicationType[]>([]);
+  const [analysisDepth, setAnalysisDepth] = useState<number>(6);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartRefCosts = useRef<HTMLDivElement>(null);
+  const chartRefHist = useRef<HTMLDivElement>(null);
+
+  const filteredJobs = selectedJob
+    ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
+    : jobs;
+
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -72,26 +83,24 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
+      request(`${URL_QUANTITYAPPLICATIONS}/months/${analysisDepth}`, MethodsEnum.GET, setHistApplication);
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
+        setCandidate(data);
+        const jobOptions = data.map((item: CandidateType) => ({
+          value: item.jobTitle,
+          label: item.jobTitle
+        }));
+        setOptions(jobOptions);
+      });
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
     } finally {
       setLoading(false);
     }
-  }, [])
-
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartRefCosts = useRef<HTMLDivElement>(null);
-  const chartRefHist = useRef<HTMLDivElement>(null);
-
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -147,7 +156,6 @@ const DashboardScreen = () => {
     }
   }, [jobs, selectedJob, candidates]);
 
-  //custo
   useEffect(() => {
     if (!chartRefCosts.current || monthlyCosts.length === 0) return;
     const chartDom = chartRefCosts.current;
@@ -235,13 +243,11 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
-
-  const [analysisDepth, setAnalysisDepth] = useState<number>(3);
-
   useEffect(() => {
     if (chartRef.current) {
       const chart = echarts.init(chartRefHist.current);
 
+      // Pegando o mês e ano atual
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
@@ -249,7 +255,14 @@ const DashboardScreen = () => {
       // const currentMonth = 2; // Março (0 = Janeiro)
       // const currentYear = 2025;
 
-      const generateRealMonths = (depth:number) => {
+      const realData = histApplication
+        .slice(0, analysisDepth + 1)
+        .map(item => item.quantityApplications);
+      const forecastData = histApplication
+        .slice(analysisDepth + 1)
+        .map(item => item.quantityApplications);
+
+      const generateRealMonths = (depth: number) => {
         const months = [];
         for (let i = depth; i >= 0; i--) {
           const date = new Date(currentYear, currentMonth - i);
@@ -262,7 +275,7 @@ const DashboardScreen = () => {
 
       const generateForecastMonths = () => {
         const months = [];
-        for (let i = 1; i < 3; i++) {
+        for (let i = 1; i < 4; i++) {
           const date = new Date(currentYear, currentMonth + i);
           const month = date.getMonth() + 1;
           const year = date.getFullYear();
@@ -273,10 +286,7 @@ const DashboardScreen = () => {
 
       // Dados históricos e previsão simulados
       const realMonths = generateRealMonths(analysisDepth);
-      const realData = Array.from({ length: analysisDepth }, () => Math.floor(Math.random() * 10000) + 1000); // Mock dos valores
       const forecastMonths = generateForecastMonths();
-      const forecastData = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10000) + 1000); // Mock dos valores
-
 
       const allMonths = [...realMonths, ...forecastMonths];
 
@@ -345,8 +355,21 @@ const DashboardScreen = () => {
         chart.dispose(); // Limpar o gráfico ao desmontar o componente
       };
     }
-  }, [analysisDepth]);
-  
+  }, [analysisDepth, histApplication]);
+
+  useEffect(() => {
+    setLoading(true);
+    try {
+      request(`${URL_QUANTITYAPPLICATIONS}/months/${analysisDepth}`, MethodsEnum.GET, setHistApplication);
+    }catch(error){
+      setNotification(String(error), NotificationEnum.ERROR);
+    }finally{
+      setLoading(false)
+    }
+  },[analysisDepth])
+
+  console.log(histApplication);
+
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -366,11 +389,11 @@ const DashboardScreen = () => {
   // UTILS
   const handleStartDateChange = (date: Dayjs | null) => {
     setStartDateStr(date);
-  };
+  }
 
   const handleEndDateChange = (date: Dayjs | null) => {
     setEndDateStr(date);
-  };
+  }
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -406,59 +429,15 @@ const DashboardScreen = () => {
     }
   }
 
-  // MODAL DOUBTS
-  const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
-  const [contentDoubt, setContentDoubt] = useState<String>('');
-  const [titleDoubt, setTitleDoubt] = useState<String>('');
-
-  const showModalDoubts = (title: string, content: string) => {
-    setTitleDoubt(title);
-    setContentDoubt(content);
-    setIsModalDoubtsOpen(true);
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
   }
-
-  // EXCEL
-  const handleBeforeUpload = (file: File) => {
-    const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
-
-    return isExcel || Upload.LIST_IGNORE;
-  };
-
-  // FILTRO
-
-  useEffect(() => {
-    setLoading(true);
-    try {
-      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
-        setCandidate(data);
-        const jobOptions = data.map((item: CandidateType) => ({
-          value: item.jobTitle,
-          label: item.jobTitle
-        }));
-        setOptions(jobOptions);
-      });
-    } catch (error) {
-      setNotification(String(error), NotificationEnum.ERROR);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
 
   const handleJobChange = (value: string) => {
     setSelectedJob(value);
 
     const filteredCandidate = candidate.filter(candidate => candidate.jobTitle === value);
     setCandidate(filteredCandidate);
-  };
-
-  const filteredJobs = selectedJob
-    ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
-    : jobs;
-
-  const handleChange = (value: string | string[]) => {
-    console.log(`Selected: ${value}`);
   };
 
   const handleUpload = async () => {
@@ -487,6 +466,29 @@ const DashboardScreen = () => {
   const onChange = (info: any) => {
     setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
   };
+
+  const handleAnalysisDepth = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setAnalysisDepth(Number(event.target.value));
+  }
+
+  // EXCEL
+  const handleBeforeUpload = (file: File) => {
+    const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (!isExcel) setNotification("Você só pode enviar arquivos .xlsx!", NotificationEnum.ERROR);
+
+    return isExcel || Upload.LIST_IGNORE;
+  };
+
+  // MODAL DOUBTS
+  const [isModalDoubtsOpen, setIsModalDoubtsOpen] = useState(false);
+  const [contentDoubt, setContentDoubt] = useState<String>('');
+  const [titleDoubt, setTitleDoubt] = useState<String>('');
+
+  const showModalDoubts = (title: string, content: string) => {
+    setTitleDoubt(title);
+    setContentDoubt(content);
+    setIsModalDoubtsOpen(true);
+  }
 
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
@@ -604,7 +606,7 @@ const DashboardScreen = () => {
             <select
               id="analysisDepth"
               value={analysisDepth}
-              onChange={(e) => setAnalysisDepth(Number(e.target.value))}
+              onChange={(event) => handleAnalysisDepth(event)}
               style={{
                 padding: '6px 12px',
                 borderRadius: '8px', // Bordas arredondadas
