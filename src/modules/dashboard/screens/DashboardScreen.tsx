@@ -32,6 +32,7 @@ import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
 import { HiringCostType } from '../../../shared/types/HiringCostType';
+import { AmountCollectedType } from '../../../shared/types/AmountCollectedType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 
@@ -51,6 +52,7 @@ const DashboardScreen = () => {
   const [retentions, setRetentions] = useState<any[]>([]);
   const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
   const [ options, setOptions ] = useState<SelectProps['options']>([]);
+  const [ amountCollected, setAumontCollected ] = useState<AmountCollectedType[]>([]);
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -115,7 +117,7 @@ const DashboardScreen = () => {
         grid: {
           left: '3%',
           right: '4%',
-          bottom: '3%',
+          bottom: '10%',
           containLabel: true
         },
         xAxis: [{
@@ -133,10 +135,19 @@ const DashboardScreen = () => {
           itemStyle: {
             color: '#007BFF',
             barBorderRadius: [8, 8, 0, 0]
+          },
+          label: {
+            show: true,
+            position: 'bottom', 
+            formatter: (params) => {
+                return jobNames[params.dataIndex]; 
+            },
+            textStyle: {
+                fontSize: 12, 
+            }
           }
         }]
       };
-  
       myChart.setOption(option);
   
       return () => {
@@ -233,92 +244,102 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
-
   useEffect(() => {
     if (chartRefLine.current) {
-    
-      const myChart = echarts.init(chartRefLine.current);
-
-      const option: EChartOption = {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'cross'
+      const fetchData = async () => {
+        try {
+          const response = await fetch('http://localhost:9090/amount/collected?months=3');
+          if (!response.ok) {
+            throw new Error('Erro na requisição');
           }
-        },
-        legend: {
-          data: ['Histórico', 'Previsão'],
-          bottom: '0',
-          textStyle: {
-            fontSize: 12
-          }
-        },
-        xAxis: {
-          type: 'category',
-          name: 'Mês',
-          splitLine: {
-            lineStyle: {
-              type: 'dashed'
-            }
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: 'Custo',
-          splitLine: {
-            lineStyle: {
-              type: 'dashed'
-            }
-          }
-        },
-        series: [
-          {
-            name: 'Histórico',
-            type: 'line',
-            datasetIndex: 0,
-            symbolSize: 7,
-            symbol: 'circle', 
-            itemStyle: {
-              color: 'blue' 
+          const data: AmountCollectedType[] = await response.json();
+  
+          const currentDate = new Date();
+          const currentMonth = currentDate.getMonth() + 1; 
+          
+          const historicalData = data
+            .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
+            .map((item) => [item.month, item.collectedRevenue]);
+  
+          const forecastData = data
+            .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
+            .slice(0, 3) 
+            .map((item) => [item.month, item.collectedRevenue]);
+  
+          const myChart = echarts.init(chartRefLine.current);
+  
+          const option: EChartOption = {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                type: 'cross'
+              }
             },
-            data: [
-              [1, 4862.4],
-              [2, 5294.7],
-              [3, 5934.5],
-              [4, 7171.0],
-              [5, 8964.4],
-              [6, 10202.2],
-              [7, 11962.5],
-              [8, 14928.3],
-              [9, 16909.2]
-            ]
-          },
-          {
-            name: 'Previsão',
-            type: 'line',
-            smooth: true,
-            datasetIndex: 1,
-            symbolSize: 7,
-            symbol: 'circle', 
-            itemStyle: {
-              color: 'orange' 
+            legend: {
+              data: ['Histórico', 'Previsão'],
+              bottom: '0',
+              textStyle: {
+                fontSize: 12
+              }
             },
-            data: [
-              [10, 18555.9],
-              [11, 15755.9],
-              [12, 17255.2]
+            xAxis: {
+              type: 'category',
+              name: 'Mês',
+              splitLine: {
+                lineStyle: {
+                  type: 'dashed'
+                }
+              },
+              axisLabel: { show: true }
+            },
+            yAxis: {
+              type: 'value',
+              name: 'Custo',
+              splitLine: {
+                lineStyle: {
+                  type: 'dashed'
+                }
+              }
+            },
+            series: [
+              {
+                name: 'Histórico',
+                type: 'line',
+                symbolSize: 7,
+                symbol: 'circle',
+                itemStyle: {
+                  color: 'blue'
+                },
+                data: historicalData
+              },
+              {
+                name: 'Previsão',
+                type: 'line',
+                smooth: true,
+                symbolSize: 7,
+                symbol: 'circle',
+                itemStyle: {
+                  color: 'orange'
+                },
+                data: forecastData
+              }
             ]
-          }
-        ]
+          };
+  
+          myChart.setOption(option);
+  
+          return () => {
+            myChart.dispose();
+          };
+        } catch (error) {
+          console.error("Erro ao buscar dados:", error);
+        }
       };
-
-      myChart.setOption(option);
-
-      return () => {
-        myChart.dispose();
-      };
+  
+      fetchData();
     }
   }, []);
+  
   
   // TABLES
   const columns: TableColumnsType<JobsType> = [
@@ -581,7 +602,6 @@ const DashboardScreen = () => {
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
             <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
-              id="analysisDepth"
               style={{ padding: '6px 12px',
                 borderRadius: '8px', 
                 border: '1px solid #ccc', 
@@ -592,6 +612,7 @@ const DashboardScreen = () => {
               }}>
               <option value="3">3 meses</option>
               <option value="6">6 meses</option>
+              <option value="9">9 meses</option>
               <option value="12">12 meses</option>
               <option value="24">24 meses</option>
             </select>
