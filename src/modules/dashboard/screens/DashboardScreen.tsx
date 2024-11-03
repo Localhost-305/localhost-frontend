@@ -21,7 +21,7 @@ import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
+import { URL_AMOUNT, URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -52,7 +52,8 @@ const DashboardScreen = () => {
   const [retentions, setRetentions] = useState<any[]>([]);
   const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
   const [ options, setOptions ] = useState<SelectProps['options']>([]);
-  const [ amountCollected, setAumontCollected ] = useState<AmountCollectedType[]>([]);
+  const [ amountCollected, setAmountCollected ] = useState<AmountCollectedType[]>([]);
+  const [ selectedMonths, setSelectedMonths ] = useState(3); 
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -72,6 +73,7 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
+      request(`${URL_AMOUNT}/collected?months=${selectedMonths}`, MethodsEnum.GET, setAmountCollected);
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
     } finally {
@@ -117,35 +119,27 @@ const DashboardScreen = () => {
         grid: {
           left: '3%',
           right: '4%',
-          bottom: '10%',
+          bottom: '10%', 
+          top: '10%',
           containLabel: true
         },
         xAxis: [{
           type: 'category',
           data: jobNames,
           axisTick: { alignWithLabel: true },
-          axisLabel: { show: false }
+          axisLabel: { show: true, rotate: 30 }
         }],
         yAxis: [{ type: 'value' }],
         series: [{
           name: 'Candidatos',
           type: 'bar',
           barWidth: '60%',
+          barCategoryGap: '20%',
           data: candidateCount,
           itemStyle: {
             color: '#007BFF',
             barBorderRadius: [8, 8, 0, 0]
           },
-          label: {
-            show: true,
-            position: 'bottom', 
-            formatter: (params) => {
-                return jobNames[params.dataIndex]; 
-            },
-            textStyle: {
-                fontSize: 12, 
-            }
-          }
         }]
       };
       myChart.setOption(option);
@@ -246,100 +240,83 @@ const DashboardScreen = () => {
 
   useEffect(() => {
     if (chartRefLine.current) {
-      const fetchData = async () => {
-        try {
-          const response = await fetch('http://localhost:9090/amount/collected?months=3');
-          if (!response.ok) {
-            throw new Error('Erro na requisição');
-          }
-          const data: AmountCollectedType[] = await response.json();
-  
-          const currentDate = new Date();
-          const currentMonth = currentDate.getMonth() + 1; 
-          
-          const historicalData = data
-            .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
-            .map((item) => [item.month, item.collectedRevenue]);
-  
-          const forecastData = data
-            .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
-            .slice(0, 3) 
-            .map((item) => [item.month, item.collectedRevenue]);
-  
-          const myChart = echarts.init(chartRefLine.current);
-  
-          const option: EChartOption = {
-            tooltip: {
-              trigger: 'axis',
-              axisPointer: {
-                type: 'cross'
-              }
-            },
-            legend: {
-              data: ['Histórico', 'Previsão'],
-              bottom: '0',
-              textStyle: {
-                fontSize: 12
-              }
-            },
-            xAxis: {
-              type: 'category',
-              name: 'Mês',
-              splitLine: {
-                lineStyle: {
-                  type: 'dashed'
-                }
-              },
-              axisLabel: { show: true }
-            },
-            yAxis: {
-              type: 'value',
-              name: 'Custo',
-              splitLine: {
-                lineStyle: {
-                  type: 'dashed'
-                }
-              }
-            },
-            series: [
-              {
-                name: 'Histórico',
-                type: 'line',
-                symbolSize: 7,
-                symbol: 'circle',
-                itemStyle: {
-                  color: 'blue'
-                },
-                data: historicalData
-              },
-              {
-                name: 'Previsão',
-                type: 'line',
-                smooth: true,
-                symbolSize: 7,
-                symbol: 'circle',
-                itemStyle: {
-                  color: 'orange'
-                },
-                data: forecastData
-              }
-            ]
-          };
-  
-          myChart.setOption(option);
-  
-          return () => {
-            myChart.dispose();
-          };
-        } catch (error) {
-          console.error("Erro ao buscar dados:", error);
-        }
-      };
-  
-      fetchData();
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`http://localhost:9090/amount/collected?months=${selectedMonths}`);
+                if (!response.ok) throw new Error('Erro na requisição');
+                const data: AmountCollectedType[] = await response.json();
+
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth() + 1;
+
+                const historicalData = data
+                    .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
+                    .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+
+                const forecastData = data
+                    .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
+                    .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+
+                const myChart = echarts.init(chartRefLine.current);
+                const option: EChartOption = {
+                    tooltip: {
+                      trigger: 'axis',
+                      axisPointer: { type: 'cross' },
+                      formatter: (params) => {
+                        return params.map((param) => {
+                            const value = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(param.value[1]); 
+                            return `${param.seriesName}: ${value}`;
+                        }).join('<br/>');
+                    }
+                    },
+                    legend: {
+                        data: ['Histórico', 'Previsão'],
+                        bottom: '0',
+                        textStyle: { fontSize: 12 }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        name: 'Mês-Ano',
+                        splitLine: { lineStyle: { type: 'dashed' } },
+                        axisLabel: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Custo (R$)',
+                        splitLine: { lineStyle: { type: 'dashed' } },
+                        axisLabel: {
+                          formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                          }).format(value)
+                      }
+                    },
+                    series: [
+                        { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
+                        { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
+                    ]
+                };
+
+                myChart.setOption(option);
+
+                return () => {
+                    myChart.dispose();
+                };
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+            }
+        };
+
+        fetchData();
     }
-  }, []);
-  
+  }, [selectedMonths]); 
+
+  const handleMonthsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedMonths(Number(event.target.value));
+  };
   
   // TABLES
   const columns: TableColumnsType<JobsType> = [
@@ -589,7 +566,7 @@ const DashboardScreen = () => {
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <ScrollableDiv>
-          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '400px', marginBottom: '50px' }} />
         </ScrollableDiv>
         <ScrollableDiv>
           <h2>Custos Mensais de Contratação</h2>
@@ -602,6 +579,8 @@ const DashboardScreen = () => {
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
             <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
+              value={selectedMonths}
+              onChange={handleMonthsChange}
               style={{ padding: '6px 12px',
                 borderRadius: '8px', 
                 border: '1px solid #ccc', 
