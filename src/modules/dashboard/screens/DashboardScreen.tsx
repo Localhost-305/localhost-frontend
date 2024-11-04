@@ -458,7 +458,7 @@ const  DashboardScreen = () => {
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
           <h2 className="card-date">
-            <span>{retentions ? `${retentions} dias` : '0 dias'}</span>
+            <span>{retentions.retentionDays ? `${retentions.retentionDays} dias` : '0 dias'}</span>
           </h2>
           </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
