@@ -239,30 +239,33 @@ const DashboardScreen = () => {
   }, [monthlyCosts]);
 
   useEffect(() => {
-    if (chartRefLine.current) {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`http://localhost:9090/amount/collected?months=${selectedMonths}`);
-                if (!response.ok) throw new Error('Erro na requisição');
-                const data: AmountCollectedType[] = await response.json();
+    const fetchData = async () => {
+        try {
+            const url = selectedJob
+                ? `http://localhost:9090/amount/collected?months=${selectedMonths}&profession=${selectedJob}`
+                : `http://localhost:9090/amount/collected?months=${selectedMonths}`;
 
-                const currentDate = new Date();
-                const currentMonth = currentDate.getMonth() + 1;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Erro na requisição');
+            const data: AmountCollectedType[] = await response.json();
 
-                const historicalData = data
-                    .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
-                    .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1;
 
-                const forecastData = data
-                    .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
-                    .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+            const historicalData = data
+                .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
+                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
 
-                const myChart = echarts.init(chartRefLine.current);
-                const option: EChartOption = {
-                    tooltip: {
-                      trigger: 'axis',
-                      axisPointer: { type: 'cross' },
-                      formatter: (params) => {
+            const forecastData = data
+                .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
+                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+
+            const myChart = echarts.init(chartRefLine.current);
+            const option: EChartOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' },
+                    formatter: (params) => {
                         return params.map((param) => {
                             const value = new Intl.NumberFormat('pt-BR', {
                                 style: 'currency',
@@ -271,48 +274,47 @@ const DashboardScreen = () => {
                             return `${param.seriesName}: ${value}`;
                         }).join('<br/>');
                     }
-                    },
-                    legend: {
-                        data: ['Histórico', 'Previsão'],
-                        bottom: '0',
-                        textStyle: { fontSize: 12 }
-                    },
-                    xAxis: {
-                        type: 'category',
-                        name: 'Mês-Ano',
-                        splitLine: { lineStyle: { type: 'dashed' } },
-                        axisLabel: { show: true }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: 'Custo (R$)',
-                        splitLine: { lineStyle: { type: 'dashed' } },
-                        axisLabel: {
-                          formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                          }).format(value)
-                      }
-                    },
-                    series: [
-                        { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
-                        { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
-                    ]
-                };
+                },
+                legend: {
+                    data: ['Histórico', 'Previsão'],
+                    bottom: '0',
+                    textStyle: { fontSize: 12 }
+                },
+                xAxis: {
+                    type: 'category',
+                    name: 'Mês-Ano',
+                    splitLine: { lineStyle: { type: 'dashed' } },
+                    axisLabel: { show: true }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Custo (R$)',
+                    splitLine: { lineStyle: { type: 'dashed' } },
+                    axisLabel: {
+                        formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }).format(value)
+                    }
+                },
+                series: [
+                    { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
+                    { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
+                ]
+            };
 
-                myChart.setOption(option);
+            myChart.setOption(option);
 
-                return () => {
-                    myChart.dispose();
-                };
-            } catch (error) {
-                console.error("Erro ao buscar dados:", error);
-            }
-        };
+            return () => {
+                myChart.dispose();
+            };
+        } catch (error) {
+            console.error("Erro ao buscar dados:", error);
+        }
+    };
 
-        fetchData();
-    }
-  }, [selectedMonths]); 
+    fetchData();
+  }, [selectedMonths, selectedJob]);
 
   const handleMonthsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedMonths(Number(event.target.value));
@@ -577,24 +579,33 @@ const DashboardScreen = () => {
           <h2>Previsão e Histórico de Custos</h2>
           <small>Neste gráfico mostra o histórico e a previsão dos custos</small>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-            <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
               value={selectedMonths}
               onChange={handleMonthsChange}
-              style={{ padding: '6px 12px',
-                borderRadius: '8px', 
-                border: '1px solid #ccc', 
-                outline: 'none',
-                fontSize: '14px',
-                cursor: 'pointer',
-                backgroundColor: '#f9f9f9' 
-              }}>
+              style={{
+                  padding: '6px 12px',
+                  borderRadius: '8px', 
+                  border: '1px solid #ccc', 
+                  outline: 'none',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: '#f9f9f9',
+                  marginRight: '5px' 
+              }}
+            >
               <option value="3">3 meses</option>
               <option value="6">6 meses</option>
               <option value="9">9 meses</option>
               <option value="12">12 meses</option>
               <option value="24">24 meses</option>
             </select>
+            <Select
+              value={selectedJob} 
+              onChange={handleJobChange} 
+              style={{ width: 200 }}
+              options={options}
+              placeholder="Selecione uma vaga"
+            />
           </div>
           <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
         </ScrollableDiv>
