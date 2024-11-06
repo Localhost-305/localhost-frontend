@@ -1,21 +1,20 @@
 import { useState } from 'react';
-import { MenuClickEventHandler } from 'antd/lib/menu'; // Tipo correto do evento
+import type { MenuProps } from 'antd';
+
 import { StyledMenu } from './menu.style';
 
 const Menu = () => {
   const [current, setCurrent] = useState('Home');
-
-  const items = [
+  const items: MenuProps['items'] = [
     {
       label: 'Dashboard',
       key: 'Dashboard',
     },
   ];
 
-  // Usando o tipo correto para o evento de clique do menu
-  const onClick: MenuClickEventHandler = (e) => {
+  const onClick: MenuProps['onClick'] = (e) => {
     console.log('click ', e);
-    setCurrent(e.key); // Aqui você usa 'e.key' corretamente
+    setCurrent(e.key);
   };
 
   return (
@@ -23,9 +22,10 @@ const Menu = () => {
       onClick={onClick}
       selectedKeys={[current]}
       mode="horizontal"
-      items={items}
+      items={items as MenuProps['items']}
     />
   );
+
 };
 
 export default Menu;
