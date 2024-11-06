@@ -223,14 +223,13 @@ const DashboardScreen = () => {
           type: 'bar',
           barWidth: '60%',
           data: totalCosts,
-          markPoint: {
-            data: [
-              { type: 'max', name: 'Max' },
-              { type: 'min', name: 'Min' }
-            ]
-          },
           markLine: {
             data: [{ yAxis: averageCost, name: `Avg (R$ ${formattedAverageCost})` }]
+          },
+          label: {
+            show: true, 
+            position: 'top', 
+            formatter: (params: { value: number }) => convertNumberToMoney(params.value) 
           }
         }
       ]
@@ -242,99 +241,198 @@ const DashboardScreen = () => {
       myChart.dispose();
     };
   }, [monthlyCosts]);
-
   useEffect(() => {
-    if (chartRefHist.current) {
-      const chart = echarts.init(chartRefHist.current);
-
-      // Dados completos vindos do back-end
-      const allData = histApplication.map(item => item.quantityApplications);
-      const allMonths = histApplication.map(item => `${item.month}-${item.year}`);
-
-      const historicalData = allData.map((value, index) =>
-        index < allData.length - 3 ? value : NaN
-      );
-
-      const forecastData = allData.map((value, index) =>
-        index >= allData.length - 3 ? value : NaN
-      );
-      
-      // Configuração do gráfico com regressão
-      const option: EChartOption = {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'cross'
-          }
-        },
-        legend: {
-          data: ['Histórico', 'Previsão'],
-          bottom: '0', // Posiciona a legenda na parte inferior
-          textStyle: {
-            fontSize: 12
-          }
-        },
-        xAxis: {
-          type: 'category',
-          name: 'Mês',
-          data: allMonths,
-          splitLine: {
-            lineStyle: {
-              type: 'dashed'
-            }
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: 'Candidaturas',
-          splitLine: {
-            lineStyle: {
-              type: 'dashed'
-            }
-          }
-        },
-        series: [
-          {
-            name: 'Histórico',
-            type: 'line',
-            data: historicalData,
-            itemStyle: {
-              color: 'blue' // Cor dos dados históricos
-            },
-            label: {
-              show: true,
-              fontSize: 13.5,
-              color: 'blue',
-              position: 'top',
-              offset: [0, -8]
-            }
+    const fetchData = async () => {
+      try {
+        const url = selectedJob
+          ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
+          : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
+  
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Erro na requisição');
+        const data: HistApplicationType[] = await response.json();
+  
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+  
+        const historicalData = data
+          .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month <= currentMonth))
+          .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
+  
+        const forecastData = data
+          .filter((item) => (item.year === currentDate.getFullYear() && item.month > currentMonth) || (item.year > currentDate.getFullYear()))
+          .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
+  
+        const chart = echarts.init(chartRefHist.current);
+        const option: EChartOption = {
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' },
           },
-          {
-            name: 'Previsão', // Nome da série
-            type: 'scatter', // Tipo scatter para bolinhas
-            data: forecastData, // Dados dos últimos três meses
-            symbolSize: 10,
-            label: { 
-              show: true, 
-              fontSize: 13.5,
-              color: 'red',
-              position: 'top',
-              offset: [0, -8]
+          legend: {
+            data: ['Histórico', 'Previsão'],
+            bottom: '0',
+            textStyle: { fontSize: 12 }
+          },
+          xAxis: {
+            type: 'category',
+            name: 'Mês-Ano',
+            data: data.map(item => `${String(item.month).padStart(2, '0')}-${item.year}`),
+            splitLine: { lineStyle: { type: 'dashed' } }
+          },
+          yAxis: {
+            type: 'value',
+            name: 'Candidaturas',
+            splitLine: { lineStyle: { type: 'dashed' } }
+          },
+          series: [
+            {
+              name: 'Histórico',
+              type: 'line',
+              symbolSize: 7,
+              symbol: 'circle',
+              itemStyle: { color: 'blue' },
+              data: historicalData,
+              label: {
+                show: true,
+                position: 'top',
+                fontSize: 13.5,
+                color: 'blue',
+              }
             },
-            itemStyle: {
-              color: 'red' // Cor das bolinhas
-            },
-          }
-        ]
-      };
-
-      chart.setOption(option);
-
-      return () => {
-        chart.dispose(); // Limpar o gráfico ao desmontar o componente
-      };
-    }
+            {
+              name: 'Previsão',
+              type: 'scatter',
+              symbolSize: 10,
+              itemStyle: { color: 'red' },
+              data: forecastData,
+              label: {
+                show: true,
+                position: 'top',
+                fontSize: 13.5,
+                color: 'red',
+              }
+            }
+          ]
+        };
+  
+        chart.setOption(option);
+  
+        return () => {
+          chart.dispose();
+        };
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
+    };
+  
+    fetchData();
   }, [analysisDepth, histApplication, selectedJob]);
+  
+
+  // useEffect(() => {
+  //   if (chartRefHist.current) {
+  //     const chart = echarts.init(chartRefHist.current);
+  //     try{
+  //       const url = selectedJob 
+  //       ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
+  //       : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
+
+  //       const response = await fetch(url);
+  //           if (!response.ok) throw new Error('Erro na requisição');
+  //           const data: HistApplicationType[] = await response.json();
+
+  //       // Dados completos vindos do back-end
+  //       const allData = histApplication.map(item => item.quantityApplications);
+  //       const allMonths = histApplication.map(item => `${item.month}-${item.year}`);
+
+  //       const historicalData = allData.map((value, index) =>
+  //         index < allData.length - 3 ? value : NaN
+  //       );
+
+  //       const forecastData = allData.map((value, index) =>
+  //         index >= allData.length - 3 ? value : NaN
+  //       );
+
+  //       const option: EChartOption = {
+  //         tooltip: {
+  //           trigger: 'axis',
+  //           axisPointer: {
+  //             type: 'cross'
+  //           }
+  //         },
+  //         legend: {
+  //           data: ['Histórico', 'Previsão'],
+  //           bottom: '0',
+  //           textStyle: {
+  //             fontSize: 12
+  //           }
+  //         },
+  //         xAxis: {
+  //           type: 'category',
+  //           name: 'Mês',
+  //           data: allMonths,
+  //           splitLine: {
+  //             lineStyle: {
+  //               type: 'dashed'
+  //             }
+  //           }
+  //         },
+  //         yAxis: {
+  //           type: 'value',
+  //           name: 'Candidaturas',
+  //           splitLine: {
+  //             lineStyle: {
+  //               type: 'dashed'
+  //             }
+  //           }
+  //         },
+  //         series: [
+  //           {
+  //             name: 'Histórico',
+  //             type: 'line',
+  //             data: historicalData,
+  //             itemStyle: {
+  //               color: 'blue'
+  //             },
+  //             label: {
+  //               show: true,
+  //               fontSize: 13.5,
+  //               color: 'blue',
+  //               position: 'top',
+  //               offset: [0, -8]
+  //             }
+  //           },
+  //           {
+  //             name: 'Previsão',
+  //             type: 'scatter',
+  //             data: forecastData,
+  //             symbolSize: 10,
+  //             label: {
+  //               show: true,
+  //               fontSize: 13.5,
+  //               color: 'red',
+  //               position: 'top',
+  //               offset: [0, -8]
+  //             },
+  //             itemStyle: {
+  //               color: 'red'
+  //             },
+  //           }
+  //         ]
+  //       };
+      
+
+  //       chart.setOption(option);
+
+  //       return () => {
+  //         chart.dispose();
+  //       };
+  //     } catch(error){
+  //       console.error("Error setting up chart:", error)
+  //     }
+  //   }
+  // }, [analysisDepth, histApplication, selectedJob]);
 
   useEffect(() => {
     setLoading(true);
@@ -347,7 +445,7 @@ const DashboardScreen = () => {
     }
   }, [analysisDepth])
 
-  console.log(histApplication);
+  console.log(histApplication[3]);
 
   // TABLES
   const columns: TableColumnsType<JobsType> = [
@@ -600,6 +698,13 @@ const DashboardScreen = () => {
               <option value={12}>12 meses</option>
               <option value={24}>24 meses</option>
             </select>
+            <Select
+              value={selectedJob}
+              onChange={handleJobChange}
+              style={{ width: 200 }}
+              options={options}
+              placeholder="Selecione uma vaga"
+            />
           </div>
 
           <div style={{ width: '100%', height: '400px' }} ref={chartRefHist} />
