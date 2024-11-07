@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { TableProps, Select, Input as InputAntd } from "antd";
 
 import Screen from "../../../shared/components/screen/Screen";
-import Table from "../../../shared/components/table/Table";
-import Button from "../../../shared/components/buttons/button/Button";
 import FirstScreen from "../../firstScreen";
 import { UserType } from "../../../shared/types/UserType";
 import { useUserReducer } from "../../../store/reducers/userReducer/useUserReducer";
@@ -12,13 +10,11 @@ import { useRequests } from "../../../shared/hooks/useRequests";
 import { URL_USER } from "../../../shared/constants/urls";
 import { MethodsEnum } from "../../../shared/enums/methods.enum";
 import { UserRoutesEnum } from "../routes";
-import { formatDateTime } from "../../../shared/functions/utils/date";
 import { UserTable } from '../../../shared/components/styles/userTable.style';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
-import { StyledButton } from "../../../shared/components/styles/styledButton.style";
 import { EditTwoTone } from "@ant-design/icons";
 
 const User = () => {
@@ -29,8 +25,18 @@ const User = () => {
     // EVENTS
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, setUser)
-        .then(() => setLoading(false));
+        request(URL_USER, MethodsEnum.GET, (data) => {
+            const mappedUsers = data.map((user: any) => ({
+                id: user.userId,
+                name: user.name,
+                email: user.email,
+                createdOn: user.createdOn,
+                updatedOn: user.updatedOn,
+                roleName: user.role?.roleName || '' 
+            }));
+            setUser(mappedUsers);
+            setLoading(false);
+        });
     }, []);
 
     useEffect(() => {
@@ -77,8 +83,8 @@ const User = () => {
         },
         {
             title: 'Cargo',
-            dataIndex: 'function',
-            key: 'function',
+            dataIndex: 'roleName',
+            key: 'roleName',
             render: (text) => <p>{text}</p>,
         },
         {
@@ -127,26 +133,26 @@ const User = () => {
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
                         <Option value="name">Nome</Option>
                         <Option value="email">E-mail</Option>
-                        <Option value="function">Cargo</Option>
+                        <Option value="roleName">Cargo</Option>
                     </Select>
                     <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }}/>
                 </LimitedContainer>
             </BoxButtons>
             <UserTable
-                columns={columns as any} 
+                columns={columns as any}
                 className="table-user"
-                dataSource={objectFiltered} 
-                rowKey={(objectFiltered) => objectFiltered.id}
-                scroll={{y:550, x:900}}
+                dataSource={objectFiltered}
+                rowKey={(object) => object.id} 
+                scroll={{ y: 550, x: 900 }}
                 bordered
                 pagination={{ pageSize: 5 }}
                 components={{
                     header: {
-                    cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                        <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                        {props.children}
-                        </th>
-                    ),
+                        cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                            <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                                {props.children}
+                            </th>
+                        ),
                     },
                 }}
             />
