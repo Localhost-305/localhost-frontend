@@ -21,21 +21,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run TypeScript checks
-        run: npx tsc --noEmit
+      - name: Build React app
+        run: npm run build
 
-#      - name: Build React app
-#        run: npm run build
-#
-#      - name: Login to GitHub Container Registry
-#        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#
-#      - name: Build Docker image
-#        run: |
-#          REPOSITORY_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-#          docker build -t ghcr.io/$REPOSITORY_NAME/docker-image-react-test .
-#
-#      - name: Push Docker image to GitHub Container Registry
-#        run: |
-#          REPOSITORY_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-#          docker push ghcr.io/$REPOSITORY_NAME/docker-image-react-test:latest
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ secrets.REPOSITORY_NAME }}/docker-image-frontend-test .
+
+      - name: Push Docker image to GitHub Container Registry
+        run: docker push ghcr.io/${{ secrets.REPOSITORY_NAME }}/docker-image-frontend-test:latest
