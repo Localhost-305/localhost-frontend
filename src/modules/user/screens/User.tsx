@@ -66,7 +66,7 @@ const User = () => {
             title: 'ID',
             dataIndex: 'id',
             key: 'id',
-            width: 80,
+            width: 50,
             render: (text) => <p>{text}</p>,
         },
         {
@@ -74,23 +74,27 @@ const User = () => {
             dataIndex: 'name',
             key: 'name',
             render: (_,user) => <p>{`${user.name}`}</p>,
+            width: 150,
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
             render: (text) => <p>{text}</p>,
+            width: 150,
         },
         {
             title: 'Cargo',
             dataIndex: 'roleName',
             key: 'roleName',
             render: (text) => <p>{text}</p>,
+            width: 100,
         },
         {
             title: 'Ações',
             key: 'action',
-            width: 80,
+            width: 50,
+            align: 'center',
             render: () => (
                 <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={handleInsert} />
             ),
