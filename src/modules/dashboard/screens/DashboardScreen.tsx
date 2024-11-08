@@ -55,7 +55,7 @@ const DashboardScreen = () => {
   // BREADCRUMB
   const listBreadcrumb = [
     {
-      name: 'Dashboard',
+      name: 'Home',
       navigateTo: DashboardRoutesEnum.DASHBOARD
     }
   ]
@@ -383,13 +383,13 @@ const DashboardScreen = () => {
             key={'startDate'} 
             onChange={handleStartDateChange} 
             placeholder="Data Inicial" 
-            style={{ marginRight: '10px' }} 
+            style={{ marginRight: '5px' }} 
           />
           <DatePicker 
             key={'endDate'} 
             onChange={handleEndDateChange} 
             placeholder="Data Final" 
-            style={{ marginRight: '10px' }} 
+            style={{ marginRight: '5px' }} 
           />
           <Button key={'search'} icon={ <SearchOutlined style={{ color: 'var(--yellow)'}} /> } 
             onClick={handleSearch} />
