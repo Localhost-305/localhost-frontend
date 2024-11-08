@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { TableProps, Select, Input as InputAntd } from "antd";
 
 import Screen from "../../../shared/components/screen/Screen";
-import Table from "../../../shared/components/table/Table";
-import Button from "../../../shared/components/buttons/button/Button";
 import FirstScreen from "../../firstScreen";
 import { UserType } from "../../../shared/types/UserType";
 import { useUserReducer } from "../../../store/reducers/userReducer/useUserReducer";
@@ -12,38 +10,12 @@ import { useRequests } from "../../../shared/hooks/useRequests";
 import { URL_USER } from "../../../shared/constants/urls";
 import { MethodsEnum } from "../../../shared/enums/methods.enum";
 import { UserRoutesEnum } from "../routes";
-import { formatDateTime } from "../../../shared/functions/utils/date";
+import { UserTable } from '../../../shared/components/styles/userTable.style';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
-
-
-const columns: TableProps<UserType>['columns'] = [
-    {
-        title: 'Nome',
-        dataIndex: 'name',
-        key: 'name',
-        render: (_,user) => <p>{`${user.name}`}</p>,
-    },
-    {
-        title: 'Email',
-        dataIndex: 'email',
-        key: 'email',
-        render: (text) => <p>{text}</p>,
-    },
-    {
-        title: 'UF',
-        dataIndex: 'uf',
-        key: 'uf',
-        render: (text) => <p>{text}</p>,
-    },
-    {
-        title: 'Criado em',
-        dataIndex: 'created_on',
-        key: 'created_on',
-        render: (_,user) => <p>{formatDateTime(user.created_on)}</p>,
-    }
-];
+import { DashboardRoutesEnum } from "../../dashboard/routes";
+import { EditTwoTone } from "@ant-design/icons";
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -53,8 +25,18 @@ const User = () => {
     // EVENTS
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, setUser)
-        .then(() => setLoading(false));
+        request(URL_USER, MethodsEnum.GET, (data) => {
+            const mappedUsers = data.map((user: any) => ({
+                id: user.userId,
+                name: user.name,
+                email: user.email,
+                createdOn: user.createdOn,
+                updatedOn: user.updatedOn,
+                roleName: user.role?.roleName || '' 
+            }));
+            setUser(mappedUsers);
+            setLoading(false);
+        });
     }, []);
 
     useEffect(() => {
@@ -65,10 +47,11 @@ const User = () => {
     const listBreadcrumb = [
         {
             name: 'Home',
-            navigateTo: UserRoutesEnum.USER
+            navigateTo: DashboardRoutesEnum.DASHBOARD
         },
         {
-            name: 'Lista de Usuários'
+            name: 'Lista de Usuários',
+            navigateTo: UserRoutesEnum.USER
         }
     ]
 
@@ -77,6 +60,46 @@ const User = () => {
     const handleInsert = () => {
         navigate(UserRoutesEnum.USER_INSERT);
     }
+
+    const columns: TableProps<UserType>['columns'] = [
+        {
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
+            width: 50,
+            render: (text) => <p>{text}</p>,
+        },
+        {
+            title: 'Nome',
+            dataIndex: 'name',
+            key: 'name',
+            render: (_,user) => <p>{`${user.name}`}</p>,
+            width: 150,
+        },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email',
+            render: (text) => <p>{text}</p>,
+            width: 150,
+        },
+        {
+            title: 'Cargo',
+            dataIndex: 'roleName',
+            key: 'roleName',
+            render: (text) => <p>{text}</p>,
+            width: 100,
+        },
+        {
+            title: 'Ações',
+            key: 'action',
+            width: 50,
+            align: 'center',
+            render: () => (
+                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={handleInsert} />
+            ),
+        }
+    ];
 
     // Search ANTD
     const [ objectFiltered, setObjectFiltered ] = useState<UserType[]>([]);
@@ -89,9 +112,6 @@ const User = () => {
         } else {
             const filteredObjects = user.filter((object) => {
                 const fieldValue = (object as any)[filterColumn];
-                if (filterColumn === 'created_on'){
-                    return formatDateTime(fieldValue).includes(value);
-                }
                 if (filterColumn === 'name'){
                     return `${object.name}`.toLowerCase().includes(value.toLowerCase());
                 }
@@ -112,21 +132,34 @@ const User = () => {
     return(
         <Screen listBreadcrumb={listBreadcrumb}> 
             {isLoading && <FirstScreen/>}
-            
             <BoxButtons>
                 <LimitedContainer width={240}>
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
                         <Option value="name">Nome</Option>
                         <Option value="email">E-mail</Option>
-                        <Option value="created_on">Criado em</Option>
+                        <Option value="roleName">Cargo</Option>
                     </Select>
-                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton/>
-                </LimitedContainer>
-                <LimitedContainer width={120}>
-                    <Button type="button" id="insert" text="Inserir" onClick={handleInsert}/>
+                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }}/>
                 </LimitedContainer>
             </BoxButtons>
-            <Table columns={columns} dataSource={objectFiltered} rowKey={(objectFiltered) => objectFiltered.id} scroll={{y:550, x:1000}}/>
+            <UserTable
+                columns={columns as any}
+                className="table-user"
+                dataSource={objectFiltered}
+                rowKey={(object) => object.id} 
+                scroll={{ y: 550, x: 900 }}
+                bordered
+                pagination={{ pageSize: 5 }}
+                components={{
+                    header: {
+                        cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                            <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                                {props.children}
+                            </th>
+                        ),
+                    },
+                }}
+            />
         </Screen>
     )
 }
