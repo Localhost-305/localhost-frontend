@@ -35,6 +35,7 @@ import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
 import { transpose } from 'date-fns';
+import { CloseOutlined } from '@ant-design/icons'; 
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -64,7 +65,6 @@ const DashboardScreen = () => {
     ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
     : jobs;
 
-
   // BREADCRUMB
   const listBreadcrumb = [
     {
@@ -83,7 +83,7 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
-      request(`${URL_QUANTITYAPPLICATIONS}/months/${analysisDepth}`, MethodsEnum.GET, setHistApplication);
+      request(`${URL_QUANTITYAPPLICATIONS}/collected?months=${analysisDepth}`, MethodsEnum.GET, setHistApplication);
       request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
         setCandidate(data);
         const jobOptions = data.map((item: CandidateType) => ({
@@ -227,9 +227,9 @@ const DashboardScreen = () => {
             data: [{ yAxis: averageCost, name: `Avg (R$ ${formattedAverageCost})` }]
           },
           label: {
-            show: true, 
-            position: 'top', 
-            formatter: (params: { value: number }) => convertNumberToMoney(params.value) 
+            show: true,
+            position: 'top',
+            formatter: (params: { value: number }) => convertNumberToMoney(params.value)
           }
         }
       ]
@@ -241,28 +241,29 @@ const DashboardScreen = () => {
       myChart.dispose();
     };
   }, [monthlyCosts]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const url = selectedJob
           ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
           : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
-  
+
         const response = await fetch(url);
         if (!response.ok) throw new Error('Erro na requisição');
         const data: HistApplicationType[] = await response.json();
-  
+
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth() + 1;
-  
+
         const historicalData = data
           .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month <= currentMonth))
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
-  
+
         const forecastData = data
           .filter((item) => (item.year === currentDate.getFullYear() && item.month > currentMonth) || (item.year > currentDate.getFullYear()))
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
-  
+
         const chart = echarts.init(chartRefHist.current);
         const option: EChartOption = {
           tooltip: {
@@ -315,9 +316,9 @@ const DashboardScreen = () => {
             }
           ]
         };
-  
+
         chart.setOption(option);
-  
+
         return () => {
           chart.dispose();
         };
@@ -325,127 +326,20 @@ const DashboardScreen = () => {
         console.error("Erro ao buscar dados:", error);
       }
     };
-  
+
     fetchData();
   }, [analysisDepth, histApplication, selectedJob]);
-  
-
-  // useEffect(() => {
-  //   if (chartRefHist.current) {
-  //     const chart = echarts.init(chartRefHist.current);
-  //     try{
-  //       const url = selectedJob 
-  //       ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
-  //       : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
-
-  //       const response = await fetch(url);
-  //           if (!response.ok) throw new Error('Erro na requisição');
-  //           const data: HistApplicationType[] = await response.json();
-
-  //       // Dados completos vindos do back-end
-  //       const allData = histApplication.map(item => item.quantityApplications);
-  //       const allMonths = histApplication.map(item => `${item.month}-${item.year}`);
-
-  //       const historicalData = allData.map((value, index) =>
-  //         index < allData.length - 3 ? value : NaN
-  //       );
-
-  //       const forecastData = allData.map((value, index) =>
-  //         index >= allData.length - 3 ? value : NaN
-  //       );
-
-  //       const option: EChartOption = {
-  //         tooltip: {
-  //           trigger: 'axis',
-  //           axisPointer: {
-  //             type: 'cross'
-  //           }
-  //         },
-  //         legend: {
-  //           data: ['Histórico', 'Previsão'],
-  //           bottom: '0',
-  //           textStyle: {
-  //             fontSize: 12
-  //           }
-  //         },
-  //         xAxis: {
-  //           type: 'category',
-  //           name: 'Mês',
-  //           data: allMonths,
-  //           splitLine: {
-  //             lineStyle: {
-  //               type: 'dashed'
-  //             }
-  //           }
-  //         },
-  //         yAxis: {
-  //           type: 'value',
-  //           name: 'Candidaturas',
-  //           splitLine: {
-  //             lineStyle: {
-  //               type: 'dashed'
-  //             }
-  //           }
-  //         },
-  //         series: [
-  //           {
-  //             name: 'Histórico',
-  //             type: 'line',
-  //             data: historicalData,
-  //             itemStyle: {
-  //               color: 'blue'
-  //             },
-  //             label: {
-  //               show: true,
-  //               fontSize: 13.5,
-  //               color: 'blue',
-  //               position: 'top',
-  //               offset: [0, -8]
-  //             }
-  //           },
-  //           {
-  //             name: 'Previsão',
-  //             type: 'scatter',
-  //             data: forecastData,
-  //             symbolSize: 10,
-  //             label: {
-  //               show: true,
-  //               fontSize: 13.5,
-  //               color: 'red',
-  //               position: 'top',
-  //               offset: [0, -8]
-  //             },
-  //             itemStyle: {
-  //               color: 'red'
-  //             },
-  //           }
-  //         ]
-  //       };
-      
-
-  //       chart.setOption(option);
-
-  //       return () => {
-  //         chart.dispose();
-  //       };
-  //     } catch(error){
-  //       console.error("Error setting up chart:", error)
-  //     }
-  //   }
-  // }, [analysisDepth, histApplication, selectedJob]);
 
   useEffect(() => {
     setLoading(true);
     try {
-      request(`${URL_QUANTITYAPPLICATIONS}/months/${analysisDepth}`, MethodsEnum.GET, setHistApplication);
+      request(`${URL_QUANTITYAPPLICATIONS}/collected?months=${analysisDepth}`, MethodsEnum.GET, setHistApplication);
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
     } finally {
       setLoading(false)
     }
   }, [analysisDepth])
-
-  console.log(histApplication[3]);
 
   // TABLES
   const columns: TableColumnsType<JobsType> = [
@@ -510,10 +404,15 @@ const DashboardScreen = () => {
     setWindowWidth(window.innerWidth);
   }
 
-  const handleJobChange = (value: string) => {
+  const handleJobChangeReset = (value: string | null) => {
+    // Forçando o estado a ser null, independente do valor passado
+    setSelectedJob(null);
+  };
+
+  const handleJobChange = (value: string | null) => {
     setSelectedJob(value);
 
-    const filteredCandidate = candidate.filter(candidate => candidate.jobTitle === value);
+    const filteredCandidate = candidate.filter((candidate) => candidate.jobTitle === value);
     setCandidate(filteredCandidate);
   };
 
@@ -705,6 +604,22 @@ const DashboardScreen = () => {
               options={options}
               placeholder="Selecione uma vaga"
             />
+            {/* <button onClick={() => handleJobChangeReset(null)}>X</button> */}
+            <button
+              onClick={() => handleJobChangeReset(null)}
+              style={{
+                backgroundColor: '#FFCCCC', // Fundo transparente
+                border: 'none', // Sem borda
+                color: 'red', // Cor do "X"
+                fontSize: '10px', // Tamanho da fonte
+                cursor: 'pointer', // Cursor de clique
+                fontWeight: 'bold', // Deixa o "X" em negrito
+                padding: '3px 5px', // Remove o padding
+                transition: 'color 0.3s ease', // Transição suave na cor
+              }}
+            >
+              <CloseOutlined style={{ fontSize: '18px' }} /> {/* Ícone do Ant Design */}
+            </button>
           </div>
 
           <div style={{ width: '100%', height: '400px' }} ref={chartRefHist} />
