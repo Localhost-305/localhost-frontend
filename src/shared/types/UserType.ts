@@ -1,7 +1,17 @@
+export interface Permission {
+    permissionid: number;
+    permissionName: string;
+}
+
+export interface Role {
+    id: number;
+    roleName: string;
+    permissions: Permission[];
+}
 
 export interface UserType {
-    id: number;
+    userId: number;
     name: string;
     email: string;
-    jobTitle: string;
+    role: Role;
 }

@@ -6,7 +6,7 @@ import Screen from "../../../shared/components/screen/Screen";
 import Table from "../../../shared/components/table/Table";
 import Button from "../../../shared/components/buttons/button/Button";
 import FirstScreen from "../../firstScreen";
-import { UserType } from "../../../shared/types/UserType";
+import { Permission, UserType } from "../../../shared/types/UserType";
 import { useUserReducer } from "../../../store/reducers/userReducer/useUserReducer";
 import { useRequests } from "../../../shared/hooks/useRequests";
 import { URL_USER } from "../../../shared/constants/urls";
@@ -31,14 +31,46 @@ const User = () => {
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [jobTitle, setJobTitle] = useState("");
+    const [roleName, setRoleName] = useState("");
+    const currentUser: UserType | null = user.length > 0 ? user[0] : null;
 
-    // MODAL
+    const hasChangePermission = currentUser?.role?.permissions?.some(
+    (permission: Permission) => permission.permissionid === 2
+    );
+
+    // EVENTS
+    useEffect(() => {
+        setLoading(true);
+        request(URL_USER, MethodsEnum.GET, (data) => {
+            const mappedUsers = data.map((user: any) => ({
+                userId: user.userId,
+                name: user.name,
+                email: user.email,
+                role: user.role ? {
+                    id: user.role.id,
+                    roleName: user.role.roleName,
+                    permissions: user.role.permissions
+                } : null
+            }));
+            
+            setUser(mappedUsers);
+            setLoading(false);
+        });
+    }, []);    
+    
+    useEffect(() => {
+        setObjectFiltered([...user])
+    }, [user]);
+
     const showEditModal = (user: UserType) => {
+        if (!hasChangePermission) {
+            alert("Você não tem permissão para editar este usuário.");
+            return;
+        }
         setSelectedUser(user);
         setName(user.name);
         setEmail(user.email);
-        setJobTitle(user.jobTitle);
+        setRoleName(user.role ? user.role.roleName : "");
         setIsModalVisible(true);
     };
 
@@ -47,21 +79,9 @@ const User = () => {
         setSelectedUser(null);
     };
 
-     const handleSaveChanges = () => {
+    const handleSaveChanges = () => {
         handleCloseModal();
-        console.log("Dados atualizados:", { id: selectedUser?.id, name, email, jobTitle });
     };
-
-    // EVENTS
-    useEffect(() => {
-        setLoading(true);
-        request(URL_USER, MethodsEnum.GET, setUser)
-        .then(() => setLoading(false));
-    }, []);
-
-    useEffect(() => {
-        setObjectFiltered([...user])
-    }, [user]);
 
     // BREADCRUMB
     const listBreadcrumb = [
@@ -84,8 +104,8 @@ const User = () => {
     const columns: TableProps<UserType>['columns'] = [
         {
             title: 'ID',
-            dataIndex: 'id',
-            key: 'id',
+            dataIndex: 'userId',
+            key: 'userId',
             width: 80,
             render: (text) => <p>{text}</p>,
         },
@@ -103,9 +123,9 @@ const User = () => {
         },
         {
             title: 'Cargo',
-            dataIndex: 'jobTitle',
-            key: 'jobTitle',
-            render: (text) => <p>{text}</p>,
+            dataIndex: 'roleName',
+            key: 'roleName',
+            render: (_, user) => <p>{user.role ? user.role.roleName : "N/A"}</p>,
         },
         {
             title: 'Ações',
@@ -153,7 +173,7 @@ const User = () => {
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
                         <Option value="name">Nome</Option>
                         <Option value="email">E-mail</Option>
-                        <Option value="function">Cargo</Option>
+                        <Option value="roleName">Cargo</Option>
                     </Select>
                     <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }}/>
                 </LimitedContainer>
@@ -162,7 +182,7 @@ const User = () => {
                 columns={columns as any} 
                 className="table-user"
                 dataSource={objectFiltered} 
-                rowKey={(objectFiltered) => objectFiltered.id}
+                rowKey={(object) => object.userId}
                 scroll={{y:550, x:900}}
                 bordered
                 pagination={{ pageSize: 5 }}
@@ -187,7 +207,7 @@ const User = () => {
                 >
                 {selectedUser && (
                     <div>
-                        <p><strong>ID:</strong> {selectedUser.id}</p>
+                        <p><strong>ID:</strong> {selectedUser.userId}</p>
                         <label><strong>Nome:</strong></label>
                         <InputAntd value={name} onChange={(e) => setName(e.target.value)} />
 
@@ -195,7 +215,7 @@ const User = () => {
                         <InputAntd value={email} onChange={(e) => setEmail(e.target.value)} />
 
                         <label><strong>Cargo:</strong></label>
-                        <InputAntd value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+                        <InputAntd value={roleName} onChange={(e) => setRoleName(e.target.value)} />
                     </div>
                 )}
             </Modal>
