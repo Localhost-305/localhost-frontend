@@ -1,5 +1,5 @@
 {
-  "name": "gaia-screening",
+  "name": "api",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -21,7 +21,7 @@
     "bootstrap": "^5.3.3",
     "date-fns": "^3.6.0",
     "echarts": "^5.5.0",
-    "gaia-screening": "file:",
+    "api": "file:",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.4",
     "mermaid": "^10.9.1",
