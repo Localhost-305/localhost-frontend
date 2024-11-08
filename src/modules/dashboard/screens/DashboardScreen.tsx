@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
-import { Radio, Select, Space } from 'antd';
-import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Select } from 'antd';
+import type { DatePickerProps, SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
@@ -11,7 +11,8 @@ import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from '../../firstScreen';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DashboardRoutesEnum } from '../routes';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
@@ -20,7 +21,7 @@ import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
+import { URL_AMOUNT, URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -31,9 +32,9 @@ import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
 import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
 import { HiringCostType } from '../../../shared/types/HiringCostType';
+import { AmountCollectedType } from '../../../shared/types/AmountCollectedType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
-
 
 const DashboardScreen = () => {
   const { request } = useRequests();
@@ -51,6 +52,8 @@ const DashboardScreen = () => {
   const [retentions, setRetentions] = useState<any[]>([]);
   const [ selectedJob, setSelectedJob ] = useState<string | null>(null);
   const [ options, setOptions ] = useState<SelectProps['options']>([]);
+  const [ amountCollected, setAmountCollected ] = useState<AmountCollectedType[]>([]);
+  const [ selectedMonths, setSelectedMonths ] = useState(3); 
 
   // BREADCRUMB
   const listBreadcrumb = [
@@ -70,6 +73,7 @@ const DashboardScreen = () => {
       request(`${URL_JOB}/jobAverage`, MethodsEnum.GET, setJobs);
       request(`${URL_JOB}/jobAverageAll`, MethodsEnum.GET, setJobsAverageAll);
       request(`${URL_HIRING}/cost?startDate=${startDateStr ? startDateStr : "2000-01-01"}&endDate=${endDateStr ? endDateStr : "3000-01-01"}`, MethodsEnum.GET, setMonthlyCosts);
+      request(`${URL_AMOUNT}/collected?months=${selectedMonths}`, MethodsEnum.GET, setAmountCollected);
     } catch (error) {
       setNotification(String(error), NotificationEnum.ERROR);
     } finally {
@@ -79,6 +83,7 @@ const DashboardScreen = () => {
 
   const chartRef = useRef<HTMLDivElement>(null);
   const chartRefCosts = useRef<HTMLDivElement>(null);
+  const chartRefLine = useRef<HTMLDivElement>(null);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -114,28 +119,29 @@ const DashboardScreen = () => {
         grid: {
           left: '3%',
           right: '4%',
-          bottom: '3%',
+          bottom: '10%', 
+          top: '10%',
           containLabel: true
         },
         xAxis: [{
           type: 'category',
           data: jobNames,
           axisTick: { alignWithLabel: true },
-          axisLabel: { show: false }
+          axisLabel: { show: true, rotate: 30 }
         }],
         yAxis: [{ type: 'value' }],
         series: [{
           name: 'Candidatos',
           type: 'bar',
           barWidth: '60%',
+          barCategoryGap: '20%',
           data: candidateCount,
           itemStyle: {
             color: '#007BFF',
             barBorderRadius: [8, 8, 0, 0]
-          }
+          },
         }]
       };
-  
       myChart.setOption(option);
   
       return () => {
@@ -232,6 +238,88 @@ const DashboardScreen = () => {
     };
   }, [monthlyCosts]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const url = selectedJob
+                ? `http://localhost:9090/amount/collected?months=${selectedMonths}&profession=${selectedJob}`
+                : `http://localhost:9090/amount/collected?months=${selectedMonths}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Erro na requisição');
+            const data: AmountCollectedType[] = await response.json();
+
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1;
+
+            const historicalData = data
+                .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
+                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+
+            const forecastData = data
+                .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
+                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+
+            const myChart = echarts.init(chartRefLine.current);
+            const option: EChartOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' },
+                    formatter: (params) => {
+                        return params.map((param) => {
+                            const value = new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(param.value[1]); 
+                            return `${param.seriesName}: ${value}`;
+                        }).join('<br/>');
+                    }
+                },
+                legend: {
+                    data: ['Histórico', 'Previsão'],
+                    bottom: '0',
+                    textStyle: { fontSize: 12 }
+                },
+                xAxis: {
+                    type: 'category',
+                    name: 'Mês-Ano',
+                    splitLine: { lineStyle: { type: 'dashed' } },
+                    axisLabel: { show: true }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Custo (R$)',
+                    splitLine: { lineStyle: { type: 'dashed' } },
+                    axisLabel: {
+                        formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }).format(value)
+                    }
+                },
+                series: [
+                    { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
+                    { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
+                ]
+            };
+
+            myChart.setOption(option);
+
+            return () => {
+                myChart.dispose();
+            };
+        } catch (error) {
+            console.error("Erro ao buscar dados:", error);
+        }
+    };
+
+    fetchData();
+  }, [selectedMonths, selectedJob]);
+
+  const handleMonthsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedMonths(Number(event.target.value));
+  };
+  
   // TABLES
   const columns: TableColumnsType<JobsType> = [
     {
@@ -249,7 +337,15 @@ const DashboardScreen = () => {
   ];
 
   // UTILS
-    const handleStartDateChange = (date: Dayjs | null) => {
+
+  dayjs.extend(customParseFormat);
+
+  const dateFormat = 'DD/MM/YYYY';
+
+  const customFormat: DatePickerProps['format'] = (value) =>
+    `custom format: ${value.format(dateFormat)}`;
+  
+  const handleStartDateChange = (date: Dayjs | null) => {
     setStartDateStr(date);
   };
 
@@ -380,12 +476,14 @@ const DashboardScreen = () => {
       <BoxButtons>
         <div>
           <DatePicker 
+            format={dateFormat}
             key={'startDate'} 
             onChange={handleStartDateChange} 
             placeholder="Data Inicial" 
             style={{ marginRight: '5px' }} 
           />
           <DatePicker 
+            format={dateFormat}
             key={'endDate'} 
             onChange={handleEndDateChange} 
             placeholder="Data Final" 
@@ -470,12 +568,46 @@ const DashboardScreen = () => {
         <h2>Quantidade de Candidaturas por Cargo</h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <ScrollableDiv>
-          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '300px', marginBottom: '50px' }} />
+          <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '400px', marginBottom: '50px' }} />
         </ScrollableDiv>
         <ScrollableDiv>
           <h2>Custos Mensais de Contratação</h2>
           <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
-          <div style={{ width: '100%', height: '300px' }} ref={chartRefCosts} />
+          <div style={{ width: '100%', height: '300px', marginBottom: '50px' }} ref={chartRefCosts} />
+        </ScrollableDiv>
+        <ScrollableDiv>
+          <h2>Previsão e Histórico de Custos</h2>
+          <small>Neste gráfico mostra o histórico e a previsão dos custos</small>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+            <select
+              value={selectedMonths}
+              onChange={handleMonthsChange}
+              style={{
+                  padding: '6px 12px',
+                  borderRadius: '8px', 
+                  border: '1px solid #ccc', 
+                  outline: 'none',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: '#f9f9f9',
+                  marginRight: '5px' 
+              }}
+            >
+              <option value="3">3 meses</option>
+              <option value="6">6 meses</option>
+              <option value="9">9 meses</option>
+              <option value="12">12 meses</option>
+              <option value="24">24 meses</option>
+            </select>
+            <Select
+              value={selectedJob} 
+              onChange={handleJobChange} 
+              style={{ width: 200 }}
+              options={options}
+              placeholder="Selecione uma vaga"
+            />
+          </div>
+          <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
         </ScrollableDiv>
       </LimitedContainer>
       <Modal title={titleDoubt}
