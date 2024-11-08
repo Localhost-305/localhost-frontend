@@ -405,7 +405,6 @@ const DashboardScreen = () => {
   }
 
   const handleJobChangeReset = (value: string | null) => {
-    // Forçando o estado a ser null, independente do valor passado
     setSelectedJob(null);
   };
 
@@ -576,7 +575,6 @@ const DashboardScreen = () => {
             Este gráfico exibe o histórico de candidaturas em azul e a previsão dos próximos meses em vermelho.
             A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.
           </small>
-          {/* Select para profundidade de análise */}
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
             <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
@@ -585,12 +583,12 @@ const DashboardScreen = () => {
               onChange={(event) => handleAnalysisDepth(event)}
               style={{
                 padding: '6px 12px',
-                borderRadius: '8px', // Bordas arredondadas
-                border: '1px solid #ccc', // Cor da borda
+                borderRadius: '8px', 
+                border: '1px solid #ccc', 
                 outline: 'none',
                 fontSize: '14px',
                 cursor: 'pointer',
-                backgroundColor: '#f9f9f9' // Cor de fundo suave 
+                backgroundColor: '#f9f9f9' 
               }}>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
@@ -608,17 +606,17 @@ const DashboardScreen = () => {
             <button
               onClick={() => handleJobChangeReset(null)}
               style={{
-                backgroundColor: '#FFCCCC', // Fundo transparente
-                border: 'none', // Sem borda
-                color: 'red', // Cor do "X"
-                fontSize: '10px', // Tamanho da fonte
-                cursor: 'pointer', // Cursor de clique
-                fontWeight: 'bold', // Deixa o "X" em negrito
-                padding: '3px 5px', // Remove o padding
-                transition: 'color 0.3s ease', // Transição suave na cor
+                backgroundColor: '#FFCCCC',
+                border: 'none', 
+                color: 'red', 
+                fontSize: '10px', 
+                cursor: 'pointer', 
+                fontWeight: 'bold', 
+                padding: '3px 5px', 
+                transition: 'color 0.3s ease', 
               }}
             >
-              <CloseOutlined style={{ fontSize: '18px' }} /> {/* Ícone do Ant Design */}
+              <CloseOutlined style={{ fontSize: '18px' }} /> 
             </button>
           </div>
 
