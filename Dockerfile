@@ -6,7 +6,8 @@ COPY . .
 RUN npm run build
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=build /app/dist .
+RUN rm -rf *
+# COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /app/build .
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
