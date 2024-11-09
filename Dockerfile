@@ -31,10 +31,10 @@ WORKDIR /app
 RUN npm install -g serve
 
 # Copiar os arquivos buildados do container anterior
-COPY --from=build /app/build /app
+COPY --from=build /app/dist /app
 
 # Expor a porta onde o React será servido
 EXPOSE 80
 
 # Comando para iniciar o servidor de arquivos estáticos
-CMD ["serve", "-s", "build", "-l", "80"]
+CMD ["serve", "-s", "dist", "-l", "80"]
