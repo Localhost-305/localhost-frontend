@@ -4,7 +4,7 @@ import { EChartOption } from 'echarts';
 import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
 import { Select } from 'antd';
 import type { DatePickerProps, SelectProps } from 'antd';
-import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { CloseOutlined, QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
@@ -241,11 +241,21 @@ const DashboardScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
         try {
+
+            const token = localStorage.getItem('AUTHORIZARION_KEY');
+
             const url = selectedJob
                 ? `http://localhost:9090/amount/collected?months=${selectedMonths}&profession=${selectedJob}`
                 : `http://localhost:9090/amount/collected?months=${selectedMonths}`;
 
-            const response = await fetch(url);
+            const response = await fetch(url, {
+              method: 'GET', 
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '', 
+              },
+            });
+
             if (!response.ok) throw new Error('Erro na requisição');
             const data: AmountCollectedType[] = await response.json();
 
@@ -426,6 +436,9 @@ const DashboardScreen = () => {
     }
   }, []);
 
+  const handleJobChangeReset = (value: string | null) => {
+    setSelectedJob(null);
+  };
 
   const handleJobChange = (value: string) => {
     setSelectedJob(value);
@@ -602,10 +615,25 @@ const DashboardScreen = () => {
             <Select
               value={selectedJob} 
               onChange={handleJobChange} 
-              style={{ width: 200 }}
+              style={{ width: 200, marginRight: '5px' }}
               options={options}
               placeholder="Selecione uma vaga"
             />
+            <button
+              onClick={() => handleJobChangeReset(null)}
+              style={{
+                backgroundColor: '#FFCCCC',
+                border: 'none', 
+                color: 'red', 
+                fontSize: '10px', 
+                cursor: 'pointer', 
+                fontWeight: 'bold', 
+                padding: '3px 5px', 
+                transition: 'color 0.3s ease', 
+              }}
+            >
+              <CloseOutlined style={{ fontSize: '18px' }} /> 
+            </button>
           </div>
           <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
         </ScrollableDiv>
