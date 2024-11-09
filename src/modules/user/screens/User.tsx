@@ -1,26 +1,22 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { TableProps, Select, Input as InputAntd, Modal } from "antd";
+import { SetStateAction, useEffect, useState } from "react";
+import { TableProps, Select, Input as InputAntd, Modal, Button as AntdButton } from "antd";
+import { EditTwoTone } from "@ant-design/icons";
 
 import Screen from "../../../shared/components/screen/Screen";
-import Table from "../../../shared/components/table/Table";
-import Button from "../../../shared/components/buttons/button/Button";
 import FirstScreen from "../../firstScreen";
-import { Permission, UserType } from "../../../shared/types/UserType";
+import { UserType } from "../../../shared/types/UserType";
 import { useUserReducer } from "../../../store/reducers/userReducer/useUserReducer";
 import { useRequests } from "../../../shared/hooks/useRequests";
 import { URL_USER } from "../../../shared/constants/urls";
 import { MethodsEnum } from "../../../shared/enums/methods.enum";
 import { UserRoutesEnum } from "../routes";
-import { formatDateTime } from "../../../shared/functions/utils/date";
 import { UserTable } from '../../../shared/components/styles/userTable.style';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
-import { StyledButton } from "../../../shared/components/styles/styledButton.style";
-import { Button as AntdButton } from "antd";
-import { EditTwoTone } from "@ant-design/icons";
+import { useUpdateUsers } from "../hooks/useUpdateUsers";
+
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -32,38 +28,26 @@ const User = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [roleName, setRoleName] = useState("");
-    const currentUser: UserType | null = user.length > 0 ? user[0] : null;
+    const token = localStorage.getItem('AUTHORIZARION_KEY');
 
-    const hasChangePermission = currentUser?.role?.permissions?.some(
-    (permission: Permission) => permission.permissionid === 2
-    );
+    const { userInsert,
+            errors,
+            handleInsert,
+            onChange,
+            handleChangeSelect
+        } = useUpdateUsers();
 
-    // EVENTS
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, (data) => {
-            const mappedUsers = data.map((user: any) => ({
-                userId: user.userId,
-                name: user.name,
-                email: user.email,
-                role: user.role ? {
-                    id: user.role.id,
-                    roleName: user.role.roleName,
-                    permissions: user.role.permissions
-                } : null
-            }));
-            
-            setUser(mappedUsers);
-            setLoading(false);
-        });
-    }, []);    
+        request(URL_USER, MethodsEnum.GET, setUser).then(() =>  setLoading(false));
+    }, []);
     
     useEffect(() => {
         setObjectFiltered([...user])
     }, [user]);
 
     const showEditModal = (user: UserType) => {
-        if (!hasChangePermission) {
+        if (!token) {
             alert("Você não tem permissão para editar este usuário.");
             return;
         }
@@ -80,6 +64,7 @@ const User = () => {
     };
 
     const handleSaveChanges = () => {
+
         handleCloseModal();
     };
 
@@ -93,13 +78,7 @@ const User = () => {
             name: 'Lista de Usuários',
             navigateTo: UserRoutesEnum.USER
         }
-    ]
-
-    // NAVIGATE TO
-    const navigate = useNavigate();
-    const handleInsert = () => {
-        navigate(UserRoutesEnum.USER_INSERT);
-    }
+    ];
 
     const columns: TableProps<UserType>['columns'] = [
         {
@@ -182,7 +161,7 @@ const User = () => {
                 columns={columns as any} 
                 className="table-user"
                 dataSource={objectFiltered} 
-                rowKey={(object) => object.userId}
+                rowKey={(object: UserType) => object.userId}
                 scroll={{y:550, x:900}}
                 bordered
                 pagination={{ pageSize: 5 }}
@@ -209,13 +188,15 @@ const User = () => {
                     <div>
                         <p><strong>ID:</strong> {selectedUser.userId}</p>
                         <label><strong>Nome:</strong></label>
-                        <InputAntd value={name} onChange={(e) => setName(e.target.value)} />
+                        <InputAntd value={name} 
+                            onChange={
+                                (e: { target: { value: SetStateAction<string>; }; }) => setName(e.target.value)} />
 
                         <label><strong>Email:</strong></label>
-                        <InputAntd value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <InputAntd value={email} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setEmail(e.target.value)} />
 
                         <label><strong>Cargo:</strong></label>
-                        <InputAntd value={roleName} onChange={(e) => setRoleName(e.target.value)} />
+                        <InputAntd value={roleName} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setRoleName(e.target.value)} />
                     </div>
                 )}
             </Modal>
