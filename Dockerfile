@@ -4,6 +4,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
+# ENTRYPOINT ["npm", "run", "preview", "--", "--port", "5173", "--host", "0.0.0.0"]
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 RUN rm -rf *
