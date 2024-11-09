@@ -1,5 +1,5 @@
 import { SetStateAction, useEffect, useState } from "react";
-import { TableProps, Select, Input as InputAntd, Modal, Button as AntdButton } from "antd";
+import { TableProps, notification, Select, Input as InputAntd, Modal, Button as AntdButton } from "antd";
 import { EditTwoTone } from "@ant-design/icons";
 
 import Screen from "../../../shared/components/screen/Screen";
@@ -17,7 +17,6 @@ import { useLoading } from "../../../shared/components/loadingProvider/LoadingPr
 import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { useUpdateUsers } from "../hooks/useUpdateUsers";
 
-
 const User = () => {
     const {user, setUser} = useUserReducer();
     const {request} = useRequests();
@@ -25,17 +24,10 @@ const User = () => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
     const [roleName, setRoleName] = useState("");
     const token = localStorage.getItem('AUTHORIZARION_KEY');
 
-    const { userInsert,
-            errors,
-            handleInsert,
-            onChange,
-            handleChangeSelect
-        } = useUpdateUsers();
+    const { userUpdate, handleUpdate, onChange, setUserUpdate } = useUpdateUsers();
 
     useEffect(() => {
         setLoading(true);
@@ -48,14 +40,21 @@ const User = () => {
 
     const showEditModal = (user: UserType) => {
         if (!token) {
-            alert("Você não tem permissão para editar este usuário.");
+            notification.error({
+                message: 'Acesso negado',
+                description: 'Você não tem permissão!',
+                placement: 'topRight',
+            });
             return;
         }
+
         setSelectedUser(user);
-        setName(user.name);
-        setEmail(user.email);
-        setRoleName(user.role ? user.role.roleName : "");
         setIsModalVisible(true);
+
+        setUserUpdate({
+            name: user.name,
+            email: user.email
+        });
     };
 
     const handleCloseModal = () => {
@@ -63,11 +62,39 @@ const User = () => {
         setSelectedUser(null);
     };
 
-    const handleSaveChanges = () => {
+    const handleSaveChanges = async () => {
+        if (!userUpdate.name || !userUpdate.email) {
+            notification.error({
+                message: 'Campos obrigatórios',
+                description: 'Preencha os campos vazios!',
+                placement: 'topRight',
+            });
+            return;
+        }
 
-        handleCloseModal();
+        if (selectedUser) {
+            setLoading(true);
+    
+            try {
+                await handleUpdate(selectedUser, setLoading);
+    
+                handleCloseModal();
+    
+                notification.success({
+                    message: 'Sucesso!',
+                    description: 'Os dados do usuário foram atualizados com sucesso!.',
+                    placement: 'topRight',
+                    onClose: () => window.location.reload()  
+                });
+    
+            } catch (error) {
+                console.error("Erro ao atualizar:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
     };
-
+    
     // BREADCRUMB
     const listBreadcrumb = [
         {
@@ -161,7 +188,7 @@ const User = () => {
                 columns={columns as any} 
                 className="table-user"
                 dataSource={objectFiltered} 
-                rowKey={(object: UserType) => object.userId}
+                rowKey={(object) => (object as UserType).userId}
                 scroll={{y:550, x:900}}
                 bordered
                 pagination={{ pageSize: 5 }}
@@ -187,13 +214,18 @@ const User = () => {
                 {selectedUser && (
                     <div>
                         <p><strong>ID:</strong> {selectedUser.userId}</p>
+
                         <label><strong>Nome:</strong></label>
-                        <InputAntd value={name} 
-                            onChange={
-                                (e: { target: { value: SetStateAction<string>; }; }) => setName(e.target.value)} />
+                        <InputAntd
+                            value={userUpdate.name}
+                            onChange={(e) => onChange(e, 'name')}
+                        />
 
                         <label><strong>Email:</strong></label>
-                        <InputAntd value={email} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setEmail(e.target.value)} />
+                        <InputAntd
+                            value={userUpdate.email}
+                            onChange={(e) => onChange(e, 'email')}
+                        />
 
                         <label><strong>Cargo:</strong></label>
                         <InputAntd value={roleName} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setRoleName(e.target.value)} />
