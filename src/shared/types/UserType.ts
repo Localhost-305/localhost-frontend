@@ -4,4 +4,5 @@ export interface UserType {
     email: string;
     created_on: string;
     updated_on: string;
+    roleName: string;
 }
