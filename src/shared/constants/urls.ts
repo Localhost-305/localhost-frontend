@@ -1,4 +1,4 @@
-const BASE_API_URL = 'http://container-backend:9090';
+const BASE_API_URL = 'http://34.238.123.23:9090';
 
 export const URL_USER = `${BASE_API_URL}/users`;
 export const URL_AUTH = `${BASE_API_URL}/login`;
