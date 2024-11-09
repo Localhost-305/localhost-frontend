@@ -37,7 +37,7 @@ import { HistApplicationType } from '../../../shared/types/HistApplicationType';
 import { transpose } from 'date-fns';
 import { CloseOutlined } from '@ant-design/icons'; 
 
-const DashboardScreen = () => {
+const  DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
   const { isLoading, setLoading } = useLoading();
@@ -245,14 +245,24 @@ const DashboardScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+
+        const token = localStorage.getItem('AUTHORIZARION_KEY');
+
         const url = selectedJob
-          ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
-          : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
+        ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
+        : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Erro na requisição');
-        const data: HistApplicationType[] = await response.json();
+      const response = await fetch(url, {
+        method: 'GET', 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '', // Inclui o token no cabeçalho
+        },
+      });
 
+      if (!response.ok) throw new Error('Erro na requisição');
+      const data: HistApplicationType[] = await response.json();
+      console.log(data);
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth() + 1;
 
@@ -549,8 +559,10 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date"><span>{retentions.length > 0 ? Math.floor(retentions[0].average_retention_days) : 0} dias</span></h2>
-        </StyledCard>
+          <h2 className="card-date">
+            <span>{retentions.retentionDays ? `${retentions.retentionDays} dias` : '0 dias'}</span>
+          </h2>
+          </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
             onClick={() =>
