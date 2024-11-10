@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
-import { Radio, Select, Space } from 'antd';
-import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Select } from 'antd';
+import type { SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
-import axios, { all } from "axios";
+import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
@@ -13,7 +13,6 @@ import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from '../../firstScreen';
 import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { DashboardRoutesEnum } from '../routes';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { JobsType } from '../../../shared/types/JobsType';
@@ -30,20 +29,41 @@ import { ResponsiveTable } from '../../../shared/components/styles/tableResponsi
 import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
-import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
+import { AUTHORIZARION_KEY, PERMISSIONS } from '../../../shared/constants/authorizationConstants';
 import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { AmountCollectedType } from '../../../shared/types/AmountCollectedType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
-import { transpose } from 'date-fns';
 import { CloseOutlined } from '@ant-design/icons'; 
+import { HiringRetentionType } from '../../../shared/types/HiringRetentionType';
+
+// BREADCRUMB
+const listBreadcrumb = [ { name: 'Home'} ]
+
+// TABLES
+const columns: TableColumnsType<JobsType> = [
+  {
+    title: 'Vaga',
+    dataIndex: 'JobTitle',
+  },
+  {
+    title: 'Tempo Médio',
+    dataIndex: 'AverageTime',
+    sorter: {
+      compare: (a, b) => a.AverageTime - b.AverageTime,
+      multiple: 3,
+    },
+  },
+];
+
+// VARIABLES
+const dateFormat = 'DD/MM/YYYY';
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
   const { isLoading, setLoading } = useLoading();
-  const { RangePicker } = DatePicker;
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
   const [jobs, setJobs] = useState<JobsType[]>([]);
   const [candidates, setCandidates] = useState<CandidatesType[]>([]);
@@ -52,31 +72,39 @@ const DashboardScreen = () => {
   const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
   const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
   const [fileList, setFileList] = useState<any[]>([]);
-  const [retentions, setRetentions] = useState<any[]>([]);
+  const [retentions, setRetentions] = useState<HiringRetentionType>();
 
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [options, setOptions] = useState<SelectProps['options']>([]);
   const [histApplication, setHistApplication] = useState<HistApplicationType[]>([]);
   const [analysisDepth, setAnalysisDepth] = useState<number>(6);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [ amountCollected, setAmountCollected ] = useState<AmountCollectedType[]>([]);
-  const [ selectedMonths, setSelectedMonths ] = useState(3); 
+  const [amountCollected, setAmountCollected] = useState<AmountCollectedType[]>([]);
+  const [selectedMonths, setSelectedMonths] = useState(3);
 
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
+  };
+
+  const handleMonthsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedMonths(Number(event.target.value));
+  };
+
+  let permissions = getItemStorage(PERMISSIONS);
+  if(permissions?.includes('allowed_to_see')){
+
+  }
+
+  // ECHARTS
+  const chartRefHist = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const chartRefCosts = useRef<HTMLDivElement>(null);
-  const chartRefHist = useRef<HTMLDivElement>(null);
+  const chartRefLine = useRef<HTMLDivElement>(null);
+
 
   const filteredJobs = selectedJob
     ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
     : jobs;
-
-  // BREADCRUMB
-  const listBreadcrumb = [
-    {
-      name: 'Home',
-      navigateTo: DashboardRoutesEnum.DASHBOARD
-    }
-  ]
 
   // EVENTS
   useEffect(() => {
@@ -98,6 +126,14 @@ const DashboardScreen = () => {
         }));
         setOptions(jobOptions);
       });
+      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
+        setCandidate(data);
+          const jobOptions = data.map((item: CandidateType) => ({
+            value: item.jobTitle,
+            label: item.jobTitle
+          }));
+          setOptions(jobOptions);
+        });
 
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
@@ -109,29 +145,12 @@ const DashboardScreen = () => {
     }
   }, [])
 
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartRefCosts = useRef<HTMLDivElement>(null);
-  const chartRefLine = useRef<HTMLDivElement>(null);
-
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-
-  }, []);
-
   useEffect(() => {
     if (!chartRef.current || jobs.length === 0) return;
 
     const chartDom = chartRef.current;
     const myChart = echarts.init(chartDom);
 
-    // Define os dados de acordo com o job selecionado
     const dataToUse = selectedJob
       ? candidates.filter((candidate: CandidatesType) => candidate.jobTitle === selectedJob)
       : candidates;
@@ -198,7 +217,6 @@ const DashboardScreen = () => {
 
     const averageCost = totalSum / (totalCosts.length || 1);
     const formattedAverageCost = `R$ ${convertNumberToMoney(averageCost)}`;
-
 
     const option: EChartOption = {
       tooltip: {
@@ -302,16 +320,7 @@ const DashboardScreen = () => {
             const option: EChartOption = {
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: { type: 'cross' },
-                    formatter: (params) => {
-                        return params.map((param) => {
-                            const value = new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL'
-                            }).format(param.value[1]); 
-                            return `${param.seriesName}: ${value}`;
-                        }).join('<br/>');
-                    }
+                    axisPointer: { type: 'cross' }
                 },
                 legend: {
                     data: ['Histórico', 'Previsão'],
@@ -353,11 +362,6 @@ const DashboardScreen = () => {
 
     fetchData();
   }, [selectedMonths, selectedJob]);
-
-  const handleMonthsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      setSelectedMonths(Number(event.target.value));
-  };
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -466,32 +470,10 @@ const DashboardScreen = () => {
     } finally {
       setLoading(false)
     }
-  }, [analysisDepth])
-
-  // TABLES
-  const columns: TableColumnsType<JobsType> = [
-    {
-      title: 'Vaga',
-      dataIndex: 'JobTitle',
-    },
-    {
-      title: 'Tempo Médio',
-      dataIndex: 'AverageTime',
-      sorter: {
-        compare: (a, b) => a.AverageTime - b.AverageTime,
-        multiple: 3,
-      },
-    },
-  ];
+  }, [analysisDepth]);
 
   // UTILS
   dayjs.extend(customParseFormat);
-
-  const dateFormat = 'DD/MM/YYYY';
-
-  const customFormat: DatePickerProps['format'] = (value) =>
-    `custom format: ${value.format(dateFormat)}`;
-  
 
   const handleStartDateChange = (date: Dayjs | null) => {
     setStartDateStr(date);
@@ -535,42 +517,12 @@ const DashboardScreen = () => {
     }
   }
 
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  }
-
   const handleJobChangeReset = (value: string | null) => {
     setSelectedJob(null);
   };
-
-  // FILTRO
-  useEffect(() => {
-    setLoading(true);
-    try {
-      request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
-      setCandidate(data);
-        const jobOptions = data.map((item: CandidateType) => ({
-          value: item.jobTitle,
-          label: item.jobTitle
-        }));
-        setOptions(jobOptions);
-      });
-    } catch (error) {
-      setNotification(String(error), NotificationEnum.ERROR);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleJobChangeReset = (value: string | null) => {
-    setSelectedJob(null);
-  };
-
 
   const handleJobChange = (value: string | null) => {
-
     setSelectedJob(value);
-
     const filteredCandidate = candidate.filter((candidate) => candidate.jobTitle === value);
     setCandidate(filteredCandidate);
   };
@@ -599,7 +551,7 @@ const DashboardScreen = () => {
   };
 
   const onChange = (info: any) => {
-    setFileList(info.fileList.slice(-1)); // Mantém apenas o último arquivo enviado
+    setFileList(info.fileList.slice(-1));
   };
 
   const handleAnalysisDepth = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -712,7 +664,7 @@ const DashboardScreen = () => {
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
           <h2 className="card-date">
-            <span>{retentions.retentionDays ? `${retentions.retentionDays} dias` : '0 dias'}</span>
+            <span>{retentions ? `${retentions.retentionDays} dias` : '0 dias'}</span>
           </h2>
           </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
