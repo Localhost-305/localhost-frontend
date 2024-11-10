@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { TableProps, Select, Input as InputAntd } from "antd";
+import { SetStateAction, useEffect, useState } from "react";
+import { TableProps, notification, Select, Input as InputAntd, Modal, Button as AntdButton } from "antd";
+import { EditTwoTone } from "@ant-design/icons";
 
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from "../../firstScreen";
@@ -15,34 +15,90 @@ import { LimitedContainer } from "../../../shared/components/styles/limited.styl
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
+import { useUpdateUsers } from "../hooks/useUpdateUsers";
+import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
+import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
 import { EditTwoTone } from "@ant-design/icons";
+
 
 const User = () => {
     const {user, setUser} = useUserReducer();
     const {request} = useRequests();
     const { isLoading, setLoading } = useLoading();
 
-    // EVENTS
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+    const [roleName, setRoleName] = useState("");
+    const { userUpdate, handleUpdate, onChange, setUserUpdate } = useUpdateUsers();
+
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, (data) => {
-            const mappedUsers = data.map((user: any) => ({
-                id: user.userId,
-                name: user.name,
-                email: user.email,
-                createdOn: user.createdOn,
-                updatedOn: user.updatedOn,
-                roleName: user.role?.roleName || '' 
-            }));
-            setUser(mappedUsers);
-            setLoading(false);
-        });
+        request(URL_USER, MethodsEnum.GET, setUser).then(() =>  setLoading(false));
     }, []);
-
+    
     useEffect(() => {
         setObjectFiltered([...user])
     }, [user]);
 
+    const showEditModal = (user: UserType) => {
+        const permissions = getItemStorage(PERMISSIONS);
+        
+        if (!permissions?.includes('allowed_to_change')) {
+            notification.error({
+                message: 'Acesso negado',
+                description: 'Você não tem permissão!',
+                placement: 'topRight',
+            });
+            return; 
+        }
+
+        setSelectedUser(user);
+        setIsModalVisible(true);
+
+        setUserUpdate({
+            name: user.name,
+            email: user.email
+        });
+    };
+
+    const handleCloseModal = () => {
+        setIsModalVisible(false);
+        setSelectedUser(null);
+    };
+
+    const handleSaveChanges = async () => {
+        if (!userUpdate.name || !userUpdate.email) {
+            notification.error({
+                message: 'Campos obrigatórios',
+                description: 'Preencha os campos vazios!',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        if (selectedUser) {
+            setLoading(true);
+    
+            try {
+                await handleUpdate(selectedUser, setLoading);
+    
+                handleCloseModal();
+    
+                notification.success({
+                    message: 'Sucesso!',
+                    description: 'Os dados do usuário foram atualizados com sucesso!.',
+                    placement: 'topRight',
+                    onClose: () => window.location.reload()  
+                });
+    
+            } catch (error) {
+                console.error("Erro ao atualizar:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+    
     // BREADCRUMB
     const listBreadcrumb = [
         {
@@ -53,20 +109,14 @@ const User = () => {
             name: 'Lista de Usuários',
             navigateTo: UserRoutesEnum.USER
         }
-    ]
-
-    // NAVIGATE TO
-    const navigate = useNavigate();
-    const handleInsert = () => {
-        navigate(UserRoutesEnum.USER_INSERT);
-    }
+    ];
 
     const columns: TableProps<UserType>['columns'] = [
         {
             title: 'ID',
-            dataIndex: 'id',
-            key: 'id',
-            width: 50,
+            dataIndex: 'userId',
+            key: 'userId',
+            width: 80,
             render: (text) => <p>{text}</p>,
         },
         {
@@ -87,16 +137,14 @@ const User = () => {
             title: 'Cargo',
             dataIndex: 'roleName',
             key: 'roleName',
-            render: (text) => <p>{text}</p>,
-            width: 100,
+            render: (_, user) => <p>{user.role ? user.role.roleName : "N/A"}</p>,
         },
         {
             title: 'Ações',
             key: 'action',
-            width: 50,
-            align: 'center',
-            render: () => (
-                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={handleInsert} />
+            width: 80,
+            render: (_, user) => (
+                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={() => showEditModal(user)} />
             ),
         }
     ];
@@ -145,9 +193,9 @@ const User = () => {
             <UserTable
                 columns={columns as any}
                 className="table-user"
-                dataSource={objectFiltered}
-                rowKey={(object) => object.id} 
-                scroll={{ y: 550, x: 900 }}
+                dataSource={objectFiltered} 
+                rowKey={(object) => (object as UserType).userId}
+                scroll={{y:550, x:900}}
                 bordered
                 pagination={{ pageSize: 5 }}
                 components={{
@@ -160,6 +208,36 @@ const User = () => {
                     },
                 }}
             />
+            <Modal
+                title="Dados do Usuário"
+                visible={isModalVisible}
+                onCancel={handleCloseModal}
+                footer={[
+                    <AntdButton key="cancel" onClick={handleCloseModal}>Cancelar</AntdButton>,
+                    <AntdButton key="submit" type="primary" onClick={handleSaveChanges}>Salvar</AntdButton>,
+                ]}
+                >
+                {selectedUser && (
+                    <div>
+                        <p><strong>ID:</strong> {selectedUser.userId}</p>
+
+                        <label><strong>Nome:</strong></label>
+                        <InputAntd
+                            value={userUpdate.name}
+                            onChange={(e) => onChange(e, 'name')}
+                        />
+
+                        <label><strong>Email:</strong></label>
+                        <InputAntd
+                            value={userUpdate.email}
+                            onChange={(e) => onChange(e, 'email')}
+                        />
+
+                        <label><strong>Cargo:</strong></label>
+                        <InputAntd value={roleName} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setRoleName(e.target.value)} />
+                    </div>
+                )}
+            </Modal>
         </Screen>
     )
 }

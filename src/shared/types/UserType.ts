@@ -1,8 +1,17 @@
-export interface UserType {
+export interface Permission {
+    permissionid: number;
+    permissionName: string;
+}
+
+export interface Role {
     id: number;
+    roleName: string;
+    permissions: Permission[];
+}
+
+export interface UserType {
+    userId: number;
     name: string;
     email: string;
-    created_on: string;
-    updated_on: string;
-    roleName: string;
+    role: Role;
 }
