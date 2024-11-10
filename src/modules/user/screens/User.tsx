@@ -18,7 +18,6 @@ import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { useUpdateUsers } from "../hooks/useUpdateUsers";
 import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
 import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
-import { EditTwoTone } from "@ant-design/icons";
 
 
 const User = () => {
