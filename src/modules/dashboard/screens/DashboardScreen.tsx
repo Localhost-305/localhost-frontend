@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
-import { Radio, Select, Space } from 'antd';
-import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Select } from 'antd';
+import type { SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
-import axios, { all } from "axios";
+import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
 import styles from '../styles/DashboardScreen.module.css'
@@ -36,14 +36,12 @@ import { AmountCollectedType } from '../../../shared/types/AmountCollectedType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
-import { transpose } from 'date-fns';
 import { CloseOutlined } from '@ant-design/icons'; 
 
 const DashboardScreen = () => {
   const { request } = useRequests();
   const { setNotification } = useGlobalReducer();
   const { isLoading, setLoading } = useLoading();
-  const { RangePicker } = DatePicker;
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
   const [jobs, setJobs] = useState<JobsType[]>([]);
   const [candidates, setCandidates] = useState<CandidatesType[]>([]);
