@@ -18,6 +18,8 @@ import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { useUpdateUsers } from "../hooks/useUpdateUsers";
 import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
 import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
+import { EditTwoTone } from "@ant-design/icons";
+
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -122,12 +124,14 @@ const User = () => {
             dataIndex: 'name',
             key: 'name',
             render: (_,user) => <p>{`${user.name}`}</p>,
+            width: 150,
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
             render: (text) => <p>{text}</p>,
+            width: 150,
         },
         {
             title: 'Cargo',
@@ -187,7 +191,7 @@ const User = () => {
                 </LimitedContainer>
             </BoxButtons>
             <UserTable
-                columns={columns as any} 
+                columns={columns as any}
                 className="table-user"
                 dataSource={objectFiltered} 
                 rowKey={(object) => (object as UserType).userId}
@@ -196,11 +200,11 @@ const User = () => {
                 pagination={{ pageSize: 5 }}
                 components={{
                     header: {
-                    cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                        <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                        {props.children}
-                        </th>
-                    ),
+                        cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                            <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                                {props.children}
+                            </th>
+                        ),
                     },
                 }}
             />

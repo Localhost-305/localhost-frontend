@@ -6,7 +6,7 @@ export const UserTable = styled(Table)`
   margin-top: 20px;
 
   td.ant-table-cell {
-    font-size: 18px; 
+    font-size: 16px; 
   }
 
   th.ant-table-cell {

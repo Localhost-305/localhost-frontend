@@ -6,3 +6,5 @@ export const URL_JOB = `${BASE_API_URL}/job`;
 export const URL_CANDIDATES = `${BASE_API_URL}/candidates`;
 export const URL_APPLICATIONS = `${BASE_API_URL}/factApplication`;
 export const URL_HIRING = `${BASE_API_URL}/hiring`;
+export const URL_AMOUNT = `${BASE_API_URL}/collected`;
+export const URL_QUANTITYAPPLICATIONS = `${BASE_API_URL}/quantityApplications`;
