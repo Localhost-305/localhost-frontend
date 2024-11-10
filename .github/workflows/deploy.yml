@@ -31,7 +31,20 @@ jobs:
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ secrets.REPOSITORY_NAME }}/docker-image-frontend-test .
+        run: docker build -t ghcr.io/${{ vars.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }} .
 
       - name: Push Docker image to GitHub Container Registry
-        run: docker push ghcr.io/${{ secrets.REPOSITORY_NAME }}/docker-image-frontend-test:latest
+        run: docker push ghcr.io/${{ vars.GIT_REPOSITORY_BACKEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest
+
+  deploy:
+    needs: build
+    runs-on: backend
+    steps:
+      - name: Remove Docker container
+        run: docker rm -f ${{ secrets.DOCKER_CONTAINER_FRONTEND }}
+
+      - name: Remove unused Docker images
+        run: docker image prune -a -f
+
+      - name: Run Docker container
+        run: docker run -d --name ${{ secrets.DOCKER_CONTAINER_FRONTEND }} --network ${{ secrets.DOCKER_NETWORK }} -p 80:80 ghcr.io/${{ secrets.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest

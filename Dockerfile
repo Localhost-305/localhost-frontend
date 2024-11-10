@@ -11,3 +11,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist .
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
+# docker run -d --name container-frontend --network network-api -p 80:80 ghcr.io/localhost-305/localhost-frontend/docker-image-frontend-test:latest
