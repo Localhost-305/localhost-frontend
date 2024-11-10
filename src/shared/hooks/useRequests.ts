@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ConnectionAPI, { connectionAPIPost, MethodType } from "../functions/connection/connectionAPI";
 import { URL_AUTH } from "../constants/urls";
 import { ERROR_AUTH } from "../constants/errosStatus";
-import { setAuthorizationToken, setUserData } from "../functions/connection/auth";
+import { setAuthorizationToken, setPermissions, setUserData } from "../functions/connection/auth";
 import { AuthType } from "../types/AuthType";
 import { useGlobalReducer } from "../../store/reducers/globalReducer/useGlobalReducer";
 import { NotificationEnum } from "../types/NotificationType";
@@ -41,6 +41,7 @@ export const useRequests = () => {
             setUser(info.data.user);
             setAuthorizationToken(info.data.tokenJWT);
             setUserData(info.data.user.name);
+            setPermissions(info.data.user.permissions);
             navigate(UserRoutesEnum.USER);
         }).catch((error: Error) => {
             console.log(error.message);

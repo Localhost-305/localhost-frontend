@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Table, Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
-import { Radio, Select, Space } from 'antd';
-import type { ConfigProviderProps, RadioChangeEvent, SelectProps } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Select } from 'antd';
+import type { SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
@@ -44,7 +44,6 @@ const DashboardScreen = () => {
   const [ candidate, setCandidate ] = useState<CandidateType[]>([]);
   const [jobsAverageAll, setJobsAverageAll] = useState<JobAverageAllType[]>([]);
   const { isLoading, setLoading } = useLoading();
-  const { RangePicker } = DatePicker;
   const [startDateStr, setStartDateStr] = useState<Dayjs | null>(null);
   const [endDateStr, setEndDateStr] = useState<Dayjs | null>(null);
   const [fileList, setFileList] = useState<any[]>([]);

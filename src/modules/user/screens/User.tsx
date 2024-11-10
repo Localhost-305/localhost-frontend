@@ -16,6 +16,8 @@ import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { useUpdateUsers } from "../hooks/useUpdateUsers";
+import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
+import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
 
 const User = () => {
     const {user, setUser} = useUserReducer();
@@ -25,8 +27,6 @@ const User = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
     const [roleName, setRoleName] = useState("");
-    const token = localStorage.getItem('AUTHORIZARION_KEY');
-
     const { userUpdate, handleUpdate, onChange, setUserUpdate } = useUpdateUsers();
 
     useEffect(() => {
@@ -39,13 +39,15 @@ const User = () => {
     }, [user]);
 
     const showEditModal = (user: UserType) => {
-        if (!token) {
+        const permissions = getItemStorage(PERMISSIONS);
+        
+        if (!permissions?.includes('allowed_to_change')) {
             notification.error({
                 message: 'Acesso negado',
                 description: 'Você não tem permissão!',
                 placement: 'topRight',
             });
-            return;
+            return; 
         }
 
         setSelectedUser(user);
