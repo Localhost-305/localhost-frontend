@@ -34,7 +34,7 @@ jobs:
         run: docker build -t ghcr.io/${{ vars.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }} .
 
       - name: Push Docker image to GitHub Container Registry
-        run: docker push ghcr.io/${{ vars.GIT_REPOSITORY_BACKEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest
+        run: docker push ghcr.io/${{ vars.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest
 
   deploy:
     needs: build
