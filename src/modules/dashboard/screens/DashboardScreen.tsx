@@ -29,17 +29,17 @@ import { ResponsiveTable } from '../../../shared/components/styles/tableResponsi
 import { JobAverageAllType } from '../../../shared/types/JobAverageAllType';
 import { BoxButtons } from '../../../shared/components/styles/boxButtons.style';
 import { getItemStorage } from '../../../shared/functions/connection/storageProxy';
-import { AUTHORIZARION_KEY, PERMISSIONS } from '../../../shared/constants/authorizationConstants';
+import { AUTHORIZARION_KEY } from '../../../shared/constants/authorizationConstants';
 import { HiringCostType } from '../../../shared/types/HiringCostType';
 import { AmountCollectedType } from '../../../shared/types/AmountCollectedType';
 import { convertNumberToMoney } from '../../../shared/functions/utils/money';
 import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.style';
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
-import { CloseOutlined } from '@ant-design/icons'; 
+import { CloseOutlined } from '@ant-design/icons';
 import { HiringRetentionType } from '../../../shared/types/HiringRetentionType';
 
 // BREADCRUMB
-const listBreadcrumb = [ { name: 'Home'} ]
+const listBreadcrumb = [{ name: 'Home' }]
 
 // TABLES
 const columns: TableColumnsType<JobsType> = [
@@ -61,9 +61,9 @@ const columns: TableColumnsType<JobsType> = [
 const dateFormat = 'DD/MM/YYYY';
 
 const DashboardScreen = () => {
-  const { request } = useRequests();
-  const { setNotification } = useGlobalReducer();
-  const { isLoading, setLoading } = useLoading();
+  const {request} = useRequests();
+  const {setNotification} = useGlobalReducer();
+  const {isLoading, setLoading} = useLoading();
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
   const [jobs, setJobs] = useState<JobsType[]>([]);
   const [candidates, setCandidates] = useState<CandidatesType[]>([]);
@@ -90,17 +90,11 @@ const DashboardScreen = () => {
     setSelectedMonths(Number(event.target.value));
   };
 
-  let permissions = getItemStorage(PERMISSIONS);
-  if(permissions?.includes('allowed_to_see')){
-
-  }
-
   // ECHARTS
   const chartRefHist = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const chartRefCosts = useRef<HTMLDivElement>(null);
   const chartRefLine = useRef<HTMLDivElement>(null);
-
 
   const filteredJobs = selectedJob
     ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
@@ -128,12 +122,12 @@ const DashboardScreen = () => {
       });
       request(`${URL_APPLICATIONS}/candidate`, MethodsEnum.GET, (data: CandidateType[]) => {
         setCandidate(data);
-          const jobOptions = data.map((item: CandidateType) => ({
-            value: item.jobTitle,
-            label: item.jobTitle
-          }));
-          setOptions(jobOptions);
-        });
+        const jobOptions = data.map((item: CandidateType) => ({
+          value: item.jobTitle,
+          label: item.jobTitle
+        }));
+        setOptions(jobOptions);
+      });
 
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
@@ -162,12 +156,12 @@ const DashboardScreen = () => {
       const option: EChartOption = {
         tooltip: {
           trigger: 'axis',
-          axisPointer: { type: 'shadow' }
+          axisPointer: { type: 'shadow' },
         },
         grid: {
           left: '3%',
           right: '4%',
-          bottom: '10%', 
+          bottom: '10%',
           top: '10%',
           containLabel: true
         },
@@ -186,11 +180,16 @@ const DashboardScreen = () => {
           data: candidateCount,
           itemStyle: {
             color: '#007BFF',
-            barBorderRadius: [8, 8, 0, 0]
+            borderRadius: [8, 8, 0, 0]
           },
+          label: {
+            show: true,
+            position: 'top',
+            formatter: (params: { value: number }) => (params.value)
+          }
         }]
       };
-      
+
       myChart.setOption(option);
 
       return () => {
@@ -286,78 +285,78 @@ const DashboardScreen = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-        try {
+      try {
 
-            const token = localStorage.getItem('AUTHORIZARION_KEY');
+        const token = localStorage.getItem('AUTHORIZARION_KEY');
 
-            const url = selectedJob
-                ? `http://localhost:9090/amount/collected?months=${selectedMonths}&profession=${selectedJob}`
-                : `http://localhost:9090/amount/collected?months=${selectedMonths}`;
+        const url = selectedJob
+          ? `http://localhost:9090/amount/collected?months=${selectedMonths}&profession=${selectedJob}`
+          : `http://localhost:9090/amount/collected?months=${selectedMonths}`;
 
-            const response = await fetch(url, {
-              method: 'GET', 
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token ? `Bearer ${token}` : '', 
-              },
-            });
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+        });
 
-            if (!response.ok) throw new Error('Erro na requisição');
-            const data: AmountCollectedType[] = await response.json();
+        if (!response.ok) throw new Error('Erro na requisição');
+        const data: AmountCollectedType[] = await response.json();
 
-            const currentDate = new Date();
-            const currentMonth = currentDate.getMonth() + 1;
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
 
-            const historicalData = data
-                .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
-                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+        const historicalData = data
+          .filter((item) => item.year < currentDate.getFullYear() || (item.year === currentDate.getFullYear() && item.month < currentMonth))
+          .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
 
-            const forecastData = data
-                .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
-                .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
+        const forecastData = data
+          .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
+          .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
 
-            const myChart = echarts.init(chartRefLine.current);
-            const option: EChartOption = {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'cross' }
-                },
-                legend: {
-                    data: ['Histórico', 'Previsão'],
-                    bottom: '0',
-                    textStyle: { fontSize: 12 }
-                },
-                xAxis: {
-                    type: 'category',
-                    name: 'Mês-Ano',
-                    splitLine: { lineStyle: { type: 'dashed' } },
-                    axisLabel: { show: true }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: 'Custo (R$)',
-                    splitLine: { lineStyle: { type: 'dashed' } },
-                    axisLabel: {
-                        formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                        }).format(value)
-                    }
-                },
-                series: [
-                    { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
-                    { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
-                ]
-            };
+        const myChart = echarts.init(chartRefLine.current);
+        const option: EChartOption = {
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' }
+          },
+          legend: {
+            data: ['Histórico', 'Previsão'],
+            bottom: '0',
+            textStyle: { fontSize: 12 }
+          },
+          xAxis: {
+            type: 'category',
+            name: 'Mês-Ano',
+            splitLine: { lineStyle: { type: 'dashed' } },
+            axisLabel: { show: true }
+          },
+          yAxis: {
+            type: 'value',
+            name: 'Custo (R$)',
+            splitLine: { lineStyle: { type: 'dashed' } },
+            axisLabel: {
+              formatter: (value: number | bigint) => new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              }).format(value)
+            }
+          },
+          series: [
+            { name: 'Histórico', type: 'line', symbolSize: 7, symbol: 'circle', itemStyle: { color: 'blue' }, data: historicalData },
+            { name: 'Previsão', type: 'line', smooth: true, symbolSize: 7, symbol: 'circle', itemStyle: { color: 'orange' }, data: forecastData }
+          ]
+        };
 
-            myChart.setOption(option);
+        myChart.setOption(option);
 
-            return () => {
-                myChart.dispose();
-            };
-        } catch (error) {
-            console.error("Erro ao buscar dados:", error);
-        }
+        return () => {
+          myChart.dispose();
+        };
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
     };
 
     fetchData();
@@ -370,20 +369,19 @@ const DashboardScreen = () => {
         const token = localStorage.getItem('AUTHORIZARION_KEY');
 
         const url = selectedJob
-        ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
-        : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
+          ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
+          : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
 
-      const response = await fetch(url, {
-        method: 'GET', 
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '', // Inclui o token no cabeçalho
-        },
-      });
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '', // Inclui o token no cabeçalho
+          },
+        });
 
-      if (!response.ok) throw new Error('Erro na requisição');
-      const data: HistApplicationType[] = await response.json();
-      console.log(data);
+        if (!response.ok) throw new Error('Erro na requisição');
+        const data: HistApplicationType[] = await response.json();
         const currentDate = new Date();
         const currentMonth = currentDate.getMonth() + 1;
 
@@ -457,7 +455,6 @@ const DashboardScreen = () => {
         console.error("Erro ao buscar dados:", error);
       }
     };
-
     fetchData();
   }, [analysisDepth, histApplication, selectedJob]);
 
@@ -477,11 +474,11 @@ const DashboardScreen = () => {
 
   const handleStartDateChange = (date: Dayjs | null) => {
     setStartDateStr(date);
-  }
+  };
 
   const handleEndDateChange = (date: Dayjs | null) => {
     setEndDateStr(date);
-  }
+  };
 
   const handleSearch = () => {
     if (startDateStr && endDateStr) {
@@ -515,9 +512,10 @@ const DashboardScreen = () => {
         setLoading(false);
       }
     }
-  }
+  };
 
   const handleJobChangeReset = (value: string | null) => {
+    console.log(`handleJobChangeReset: ${value}`)
     setSelectedJob(null);
   };
 
@@ -537,7 +535,7 @@ const DashboardScreen = () => {
     formData.append("file", fileList[0].originFileObj);
 
     try {
-      const response = await axios.post("http://localhost:9090/excel/upload", formData, {
+      await axios.post("http://localhost:9090/excel/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
@@ -556,7 +554,7 @@ const DashboardScreen = () => {
 
   const handleAnalysisDepth = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setAnalysisDepth(Number(event.target.value));
-  }
+  };
 
   // EXCEL
   const handleBeforeUpload = (file: File) => {
@@ -583,35 +581,28 @@ const DashboardScreen = () => {
       <h1>Dashboard dos Dados de Contratação</h1>
       <BoxButtons>
         <div>
-          <DatePicker 
-            format={dateFormat}
-            key={'startDate'} 
-            onChange={handleStartDateChange} 
-            placeholder="Data Inicial" 
-            style={{ marginRight: '5px' }} 
-          />
-          <DatePicker 
-            format={dateFormat}
-            key={'endDate'} 
-            onChange={handleEndDateChange} 
-            placeholder="Data Final" 
-            style={{ marginRight: '5px' }} 
-          />
+          <DatePicker format={dateFormat}
+            key={'startDate'}
+            onChange={handleStartDateChange}
+            placeholder="Data Inicial"
+            style={{ marginRight: '5px' }} />
+          <DatePicker format={dateFormat}
+            key={'endDate'}
+            onChange={handleEndDateChange}
+            placeholder="Data Final"
+            style={{ marginRight: '5px' }} />
           <Button key={'search'} icon={<SearchOutlined style={{ color: 'var(--yellow)' }} />}
             onClick={handleSearch} />
         </div>
         <div>
-          <Select
-            defaultValue={null}
+          <Select defaultValue={null}
             onChange={handleJobChange}
             style={{ width: 200 }}
             options={options}
-            placeholder="Selecione uma vaga"
-          />
+            placeholder="Selecione uma vaga" />
         </div>
         <div>
-          <Upload
-            accept=".xlsx"
+          <Upload accept=".xlsx"
             beforeUpload={handleBeforeUpload}
             fileList={fileList}
             onChange={onChange}
@@ -625,9 +616,8 @@ const DashboardScreen = () => {
           </Button>
         </div>
       </BoxButtons>
-      <ContainerRowResponsive maxWidth={'800px'}>
-        <ResponsiveTable
-          columns={columns as any}
+      <ContainerRowResponsive>
+        <ResponsiveTable columns={columns as any}
           className="table-responsive"
           dataSource={filteredJobs}
           bordered
@@ -641,18 +631,20 @@ const DashboardScreen = () => {
                 </th>
               ),
             },
-          }}
-        />
+        }}/>
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '1em' : '15em' }}
+          <QuestionCircleOutlined  style={{ marginBottom: windowWidth < 768 ? '0em' : '15em' }}
             onClick={() =>
               showModalDoubts('Tempo médio de contratação por cargo',
                 'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
+
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio Total</h1>
-          <h2 className="card-date"><span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span></h2>
+          <h2 className="card-date" style={{fontSize: '50px', margin: '35px 0px 0px 0px'}}>
+            <span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span>
+          </h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
@@ -663,10 +655,10 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date">
+          <h2 className="card-date" style={{fontSize: '50px', margin: '35px 0px 0px 0px'}}>
             <span>{retentions ? `${retentions.retentionDays} dias` : '0 dias'}</span>
           </h2>
-          </StyledCard>
+        </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
             onClick={() =>
@@ -693,14 +685,14 @@ const DashboardScreen = () => {
               value={selectedMonths}
               onChange={handleMonthsChange}
               style={{
-                  padding: '6px 12px',
-                  borderRadius: '8px', 
-                  border: '1px solid #ccc', 
-                  outline: 'none',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  backgroundColor: '#f9f9f9',
-                  marginRight: '5px' 
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                outline: 'none',
+                fontSize: '14px',
+                cursor: 'pointer',
+                backgroundColor: '#f9f9f9',
+                marginRight: '5px'
               }}
             >
               <option value="3">3 meses</option>
@@ -710,8 +702,8 @@ const DashboardScreen = () => {
               <option value="24">24 meses</option>
             </select>
             <Select
-              value={selectedJob} 
-              onChange={handleJobChange} 
+              value={selectedJob}
+              onChange={handleJobChange}
               style={{ width: 200, marginRight: '5px' }}
               options={options}
               placeholder="Selecione uma vaga"
@@ -720,16 +712,16 @@ const DashboardScreen = () => {
               onClick={() => handleJobChangeReset(null)}
               style={{
                 backgroundColor: '#FFCCCC',
-                border: 'none', 
-                color: 'red', 
-                fontSize: '10px', 
-                cursor: 'pointer', 
-                fontWeight: 'bold', 
-                padding: '3px 5px', 
-                transition: 'color 0.3s ease', 
+                border: 'none',
+                color: 'red',
+                fontSize: '10px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: '3px 5px',
+                transition: 'color 0.3s ease',
               }}
             >
-              <CloseOutlined style={{ fontSize: '18px' }} /> 
+              <CloseOutlined style={{ fontSize: '18px' }} />
             </button>
           </div>
           <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
@@ -748,12 +740,12 @@ const DashboardScreen = () => {
               onChange={(event) => handleAnalysisDepth(event)}
               style={{
                 padding: '6px 12px',
-                borderRadius: '8px', 
-                border: '1px solid #ccc', 
+                borderRadius: '8px',
+                border: '1px solid #ccc',
                 outline: 'none',
                 fontSize: '14px',
                 cursor: 'pointer',
-                backgroundColor: '#f9f9f9' 
+                backgroundColor: '#f9f9f9'
               }}>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
@@ -772,16 +764,16 @@ const DashboardScreen = () => {
               onClick={() => handleJobChangeReset(null)}
               style={{
                 backgroundColor: '#FFCCCC',
-                border: 'none', 
-                color: 'red', 
-                fontSize: '10px', 
-                cursor: 'pointer', 
-                fontWeight: 'bold', 
-                padding: '3px 5px', 
-                transition: 'color 0.3s ease', 
+                border: 'none',
+                color: 'red',
+                fontSize: '10px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: '3px 5px',
+                transition: 'color 0.3s ease',
               }}
             >
-              <CloseOutlined style={{ fontSize: '18px' }} /> 
+              <CloseOutlined style={{ fontSize: '18px' }} />
             </button>
           </div>
 
