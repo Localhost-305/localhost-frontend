@@ -315,7 +315,10 @@ const DashboardScreen = () => {
           .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
 
-        const myChart = echarts.init(chartRefLine.current);
+        
+        let myChart = null;
+        if(chartRefLine.current) myChart = echarts.init(chartRefLine.current);
+
         const option: EChartOption = {
           tooltip: {
             trigger: 'axis',
@@ -349,11 +352,13 @@ const DashboardScreen = () => {
           ]
         };
 
-        myChart.setOption(option);
+        if(myChart){
+          myChart.setOption(option);
 
-        return () => {
-          myChart.dispose();
-        };
+          return () => {
+            myChart.dispose();
+          };
+        }
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
@@ -365,9 +370,7 @@ const DashboardScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-
         const token = localStorage.getItem('AUTHORIZARION_KEY');
-
         const url = selectedJob
           ? `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}&profession=${selectedJob}`
           : `http://localhost:9090/quantityApplications/collected?months=${analysisDepth}`;
@@ -393,7 +396,8 @@ const DashboardScreen = () => {
           .filter((item) => (item.year === currentDate.getFullYear() && item.month > currentMonth) || (item.year > currentDate.getFullYear()))
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
 
-        const chart = echarts.init(chartRefHist.current);
+        let chart = null;
+        if(chartRefHist.current) chart = echarts.init(chartRefHist.current);
         const option: EChartOption = {
           tooltip: {
             trigger: 'axis',
@@ -446,11 +450,13 @@ const DashboardScreen = () => {
           ]
         };
 
-        chart.setOption(option);
+        if(chart){
+          chart.setOption(option);
 
-        return () => {
-          chart.dispose();
-        };
+          return () => {
+            chart.dispose();
+          };
+        }
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
