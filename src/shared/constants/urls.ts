@@ -1,4 +1,4 @@
-const BASE_API_URL = 'http://44.204.52.108/api';
+const BASE_API_URL = 'http://44.212.33.124/api';
 
 export const URL_USER = `${BASE_API_URL}/users`;
 export const URL_AUTH = `${BASE_API_URL}/login`;
