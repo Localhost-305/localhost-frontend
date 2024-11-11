@@ -356,7 +356,7 @@ const DashboardScreen = () => {
     formData.append("file", fileList[0].originFileObj);
 
     try {
-      const response = await axios.post("http://44.212.33.124/api/excel/upload", formData, {
+      const response = await axios.post("http://54.234.190.27/api/excel/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
