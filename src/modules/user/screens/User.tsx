@@ -1,9 +1,10 @@
-import { SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { TableProps, notification, Select, Input as InputAntd, Modal, Button as AntdButton } from "antd";
 import { EditTwoTone } from "@ant-design/icons";
 
 import Screen from "../../../shared/components/screen/Screen";
 import FirstScreen from "../../firstScreen";
+import SelectFilter from "../../../shared/components/inputs/selectFilter/SelectFilter";
 import { UserType } from "../../../shared/types/UserType";
 import { useUserReducer } from "../../../store/reducers/userReducer/useUserReducer";
 import { useRequests } from "../../../shared/hooks/useRequests";
@@ -17,20 +18,36 @@ import { DashboardRoutesEnum } from "../../dashboard/routes";
 import { useUpdateUsers } from "../hooks/useUpdateUsers";
 import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
 import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
+import { RoleType } from "../../../shared/types/RoleType";
+import { useGlobalReducer } from "../../../store/reducers/globalReducer/useGlobalReducer";
+import { NotificationEnum } from "../../../shared/types/NotificationType";
 
 const User = () => {
     const { user, setUser } = useUserReducer();
     const { request } = useRequests();
     const { isLoading, setLoading } = useLoading();
+    const {setNotification} = useGlobalReducer();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-    const [roleName, setRoleName] = useState("");
-    const { userUpdate, handleUpdate, onChange, setUserUpdate } = useUpdateUsers();
+    const [roleName, setRoleName] = useState<RoleType[]>([]);
+    const { userUpdate, 
+            handleUpdate, 
+            onChange, 
+            setUserUpdate, 
+            handleChangeSelect } = useUpdateUsers();
 
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, setUser).then(() => setLoading(false));
+        try{
+            request(URL_USER, MethodsEnum.GET, setUser);
+            request(`${URL_USER}/roles`, MethodsEnum.GET, setRoleName);
+        }catch(error){
+            setNotification(String(error), NotificationEnum.ERROR);
+        }finally{
+            setLoading(false);
+        }
+        
     }, []);
 
     useEffect(() => {
@@ -231,7 +248,17 @@ const User = () => {
                         />
 
                         <label><strong>Cargo:</strong></label>
-                        <InputAntd value={roleName} onChange={(e: { target: { value: SetStateAction<string>; }; }) => setRoleName(e.target.value)} />
+                        <SelectFilter
+                            value={userUpdate.roleId} 
+                            margin="0px 0px 15px 0px"
+                            onChange={(event) => handleChangeSelect(event)}
+                            defaultValue={'Selecionar'}
+                            options={
+                                roleName.map((role) => ({
+                                    value: `${role.id}`,
+                                    label: `${role.roleName}`
+                                }))
+                            }/>
                     </div>
                 )}
             </Modal>

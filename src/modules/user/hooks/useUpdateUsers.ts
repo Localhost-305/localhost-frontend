@@ -12,7 +12,8 @@ export const useUpdateUsers = () => {
     const [errors, setErrors] = useState<Partial<UpdateUser>>({});
     const [userUpdate, setUserUpdate] = useState<UpdateUser>({
         name: "",
-        email: ""
+        email: "",
+        roleId: "",
     });
 
     const handleUpdate = (selectedUser: UserType, setLoading: any) => {        
@@ -22,11 +23,15 @@ export const useUpdateUsers = () => {
             return;
         }
         setLoading(true);
-        connectionAPIPut(`${URL_USER}/${selectedUser.userId}`, userUpdate)
-        .catch((error: Error) => {
-            setNotification(error.message, NotificationEnum.ERROR);
-        })
-        .finally(() => setLoading(false));
+        try{
+            console.log(userUpdate)
+            connectionAPIPut(`${URL_USER}/${selectedUser.userId}`, userUpdate);
+            if(userUpdate.roleId != "") connectionAPIPut(`${URL_USER}/${selectedUser.userId}/role`, userUpdate.roleId);
+        }catch(error){
+            setNotification(String(error), NotificationEnum.ERROR);
+        }finally{
+            setLoading(false);
+        }
     }
 
     // INPUT EVENT
@@ -37,11 +42,20 @@ export const useUpdateUsers = () => {
         })
     }
 
+    // SELECT EVENT
+    const handleChangeSelect = (value: string) => {
+        setUserUpdate({
+            ...userUpdate,
+            ['roleId']: value
+        })
+    } 
+
     return{
         userUpdate,
         errors,
         handleUpdate,
         onChange,
-        setUserUpdate
+        setUserUpdate,
+        handleChangeSelect
     }
 }
