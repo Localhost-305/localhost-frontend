@@ -9,7 +9,6 @@ import { useUserReducer } from "../../../store/reducers/userReducer/useUserReduc
 import { useRequests } from "../../../shared/hooks/useRequests";
 import { URL_USER } from "../../../shared/constants/urls";
 import { MethodsEnum } from "../../../shared/enums/methods.enum";
-import { UserRoutesEnum } from "../routes";
 import { UserTable } from '../../../shared/components/styles/userTable.style';
 import { LimitedContainer } from "../../../shared/components/styles/limited.styled";
 import { BoxButtons } from "../../../shared/components/styles/boxButtons.style";
@@ -19,10 +18,9 @@ import { useUpdateUsers } from "../hooks/useUpdateUsers";
 import { PERMISSIONS } from '../../../shared/constants/authorizationConstants';
 import { getItemStorage } from "../../../shared/functions/connection/storageProxy";
 
-
 const User = () => {
-    const {user, setUser} = useUserReducer();
-    const {request} = useRequests();
+    const { user, setUser } = useUserReducer();
+    const { request } = useRequests();
     const { isLoading, setLoading } = useLoading();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -32,23 +30,23 @@ const User = () => {
 
     useEffect(() => {
         setLoading(true);
-        request(URL_USER, MethodsEnum.GET, setUser).then(() =>  setLoading(false));
+        request(URL_USER, MethodsEnum.GET, setUser).then(() => setLoading(false));
     }, []);
-    
+
     useEffect(() => {
         setObjectFiltered([...user])
     }, [user]);
 
     const showEditModal = (user: UserType) => {
         const permissions = getItemStorage(PERMISSIONS);
-        
+
         if (!permissions?.includes('allowed_to_change')) {
             notification.error({
                 message: 'Acesso negado',
                 description: 'Você não tem permissão!',
                 placement: 'topRight',
             });
-            return; 
+            return;
         }
 
         setSelectedUser(user);
@@ -77,19 +75,19 @@ const User = () => {
 
         if (selectedUser) {
             setLoading(true);
-    
+
             try {
                 await handleUpdate(selectedUser, setLoading);
-    
+
                 handleCloseModal();
-    
+
                 notification.success({
                     message: 'Sucesso!',
                     description: 'Os dados do usuário foram atualizados com sucesso!.',
                     placement: 'topRight',
-                    onClose: () => window.location.reload()  
+                    onClose: () => window.location.reload()
                 });
-    
+
             } catch (error) {
                 console.error("Erro ao atualizar:", error);
             } finally {
@@ -97,7 +95,7 @@ const User = () => {
             }
         }
     };
-    
+
     // BREADCRUMB
     const listBreadcrumb = [
         {
@@ -105,11 +103,11 @@ const User = () => {
             navigateTo: DashboardRoutesEnum.DASHBOARD
         },
         {
-            name: 'Lista de Usuários',
-            navigateTo: UserRoutesEnum.USER
+            name: 'Lista de Usuários'
         }
     ];
 
+    // TABLE
     const columns: TableProps<UserType>['columns'] = [
         {
             title: 'ID',
@@ -122,7 +120,7 @@ const User = () => {
             title: 'Nome',
             dataIndex: 'name',
             key: 'name',
-            render: (_,user) => <p>{`${user.name}`}</p>,
+            render: (_, user) => <p>{`${user.name}`}</p>,
             width: 150,
         },
         {
@@ -149,8 +147,8 @@ const User = () => {
     ];
 
     // Search ANTD
-    const [ objectFiltered, setObjectFiltered ] = useState<UserType[]>([]);
-    const [ filterColumn, setFilterColumn ] = useState<string>('name');
+    const [objectFiltered, setObjectFiltered] = useState<UserType[]>([]);
+    const [filterColumn, setFilterColumn] = useState<string>('name');
     const { Option } = Select;
     const { Search } = InputAntd;
     const onSearch = (value: string) => {
@@ -159,14 +157,14 @@ const User = () => {
         } else {
             const filteredObjects = user.filter((object) => {
                 const fieldValue = (object as any)[filterColumn];
-                if (filterColumn === 'name'){
+                if (filterColumn === 'name') {
                     return `${object.name}`.toLowerCase().includes(value.toLowerCase());
                 }
                 if (typeof fieldValue === 'string') {
                     return fieldValue.toLowerCase().includes(value.toLowerCase());
                 }
                 return false;
-                
+
             });
             setObjectFiltered(filteredObjects);
         }
@@ -176,9 +174,9 @@ const User = () => {
     };
 
 
-    return(
-        <Screen listBreadcrumb={listBreadcrumb}> 
-            {isLoading && <FirstScreen/>}
+    return (
+        <Screen listBreadcrumb={listBreadcrumb}>
+            {isLoading && <FirstScreen />}
             <BoxButtons>
                 <LimitedContainer width={240}>
                     <Select defaultValue="name" onChange={handleFilterColumnChange} style={{ width: 180, marginBottom: '8px' }}>
@@ -186,15 +184,15 @@ const User = () => {
                         <Option value="email">E-mail</Option>
                         <Option value="roleName">Cargo</Option>
                     </Select>
-                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }}/>
+                    <Search placeholder="Pesquisar" onSearch={onSearch} enterButton style={{ width: 250 }} />
                 </LimitedContainer>
             </BoxButtons>
             <UserTable
                 columns={columns as any}
                 className="table-user"
-                dataSource={objectFiltered} 
+                dataSource={objectFiltered}
                 rowKey={(object) => (object as UserType).userId}
-                scroll={{y:550, x:900}}
+                scroll={{ y: 550, x: 900 }}
                 bordered
                 pagination={{ pageSize: 5 }}
                 components={{
@@ -209,13 +207,13 @@ const User = () => {
             />
             <Modal
                 title="Dados do Usuário"
-                visible={isModalVisible}
+                open={isModalVisible}
                 onCancel={handleCloseModal}
                 footer={[
                     <AntdButton key="cancel" onClick={handleCloseModal}>Cancelar</AntdButton>,
                     <AntdButton key="submit" type="primary" onClick={handleSaveChanges}>Salvar</AntdButton>,
                 ]}
-                >
+            >
                 {selectedUser && (
                     <div>
                         <p><strong>ID:</strong> {selectedUser.userId}</p>
