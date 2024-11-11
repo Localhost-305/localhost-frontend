@@ -38,6 +38,7 @@ import { HistApplicationType } from '../../../shared/types/HistApplicationType';
 import { CloseOutlined } from '@ant-design/icons';
 import { HiringRetentionType } from '../../../shared/types/HiringRetentionType';
 
+
 // BREADCRUMB
 const listBreadcrumb = [{ name: 'Home' }]
 
@@ -518,7 +519,7 @@ const DashboardScreen = () => {
         setLoading(false);
       }
     }
-  };
+  }
 
   const handleJobChangeReset = (value: string | null) => {
     console.log(`handleJobChangeReset: ${value}`)
@@ -580,7 +581,7 @@ const DashboardScreen = () => {
     setContentDoubt(content);
     setIsModalDoubtsOpen(true);
   }
-
+  
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
       {isLoading && <FirstScreen />}
@@ -661,7 +662,7 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date" style={{fontSize: '50px', margin: '35px 0px 0px 0px'}}>
+          <h2 className="card-date">
             <span>{retentions ? `${retentions.retentionDays} dias` : '0 dias'}</span>
           </h2>
         </StyledCard>
@@ -691,14 +692,14 @@ const DashboardScreen = () => {
               value={selectedMonths}
               onChange={handleMonthsChange}
               style={{
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                outline: 'none',
-                fontSize: '14px',
-                cursor: 'pointer',
-                backgroundColor: '#f9f9f9',
-                marginRight: '5px'
+                  padding: '6px 12px',
+                  borderRadius: '8px', 
+                  border: '1px solid #ccc', 
+                  outline: 'none',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: '#f9f9f9',
+                  marginRight: '5px' 
               }}
             >
               <option value="3">3 meses</option>
@@ -708,8 +709,8 @@ const DashboardScreen = () => {
               <option value="24">24 meses</option>
             </select>
             <Select
-              value={selectedJob}
-              onChange={handleJobChange}
+              value={selectedJob} 
+              onChange={handleJobChange} 
               style={{ width: 200, marginRight: '5px' }}
               options={options}
               placeholder="Selecione uma vaga"
@@ -718,16 +719,16 @@ const DashboardScreen = () => {
               onClick={() => handleJobChangeReset(null)}
               style={{
                 backgroundColor: '#FFCCCC',
-                border: 'none',
-                color: 'red',
-                fontSize: '10px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                padding: '3px 5px',
-                transition: 'color 0.3s ease',
+                border: 'none', 
+                color: 'red', 
+                fontSize: '10px', 
+                cursor: 'pointer', 
+                fontWeight: 'bold', 
+                padding: '3px 5px', 
+                transition: 'color 0.3s ease', 
               }}
             >
-              <CloseOutlined style={{ fontSize: '18px' }} />
+              <CloseOutlined style={{ fontSize: '18px' }} /> 
             </button>
           </div>
           <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
@@ -739,7 +740,6 @@ const DashboardScreen = () => {
             A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.
           </small>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-            <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
               id="analysisDepth"
               value={analysisDepth}
@@ -751,7 +751,7 @@ const DashboardScreen = () => {
                 outline: 'none',
                 fontSize: '14px',
                 cursor: 'pointer',
-                backgroundColor: '#f9f9f9'
+                backgroundColor: '#f9f9f9' 
               }}>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
@@ -761,7 +761,7 @@ const DashboardScreen = () => {
             <Select
               value={selectedJob}
               onChange={handleJobChange}
-              style={{ width: 200 }}
+              style={{ width: 200, marginRight: '5px' }}
               options={options}
               placeholder="Selecione uma vaga"
             />
