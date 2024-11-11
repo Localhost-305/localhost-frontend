@@ -47,4 +47,4 @@ jobs:
         run: docker image prune -a -f
 
       - name: Run Docker container
-        run: docker run -d --name ${{ secrets.DOCKER_CONTAINER_FRONTEND }} --network ${{ secrets.DOCKER_NETWORK }} -p 80:80 ghcr.io/${{ secrets.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest
+        run: docker run -d --name ${{ secrets.DOCKER_CONTAINER_FRONTEND }} --network ${{ secrets.DOCKER_NETWORK }} -p 80:80 ghcr.io/${{ vars.GIT_REPOSITORY_FRONTEND }}/${{ vars.DOCKER_IMAGE_FRONTEND }}:latest
