@@ -1,5 +1,5 @@
 export interface RetentionType{
-     month_year: string;
+    month_year: string;
     average_retention_days: number;
 }
 

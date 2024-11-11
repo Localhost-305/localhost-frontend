@@ -9,8 +9,6 @@ import { UserRoutesEnum } from "../routes";
 import { brazilStates } from "../../../shared/constants/brazilStates";
 import { useLoading } from "../../../shared/components/loadingProvider/LoadingProvider";
 
-
-
 const UserInsert = () => {
     const { isLoading, setLoading } = useLoading();
     const { userInsert,

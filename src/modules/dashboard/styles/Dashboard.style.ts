@@ -10,7 +10,7 @@ export const StyledCard = styled(Card)`
   transition: transform 0.5s ease;
   border: 1px solid var(--yellow);
   margin-top: 20px;
-  width: 360px; 
+  width: 330px; 
   height: 200px; 
 
   &:hover {
@@ -47,7 +47,7 @@ export const StyledCard = styled(Card)`
   }
 
   .card-date {
-    font-size: 18px;
+    font-size: 26px;
     color: var(--black);
     z-index: 1; 
     position: relative; 

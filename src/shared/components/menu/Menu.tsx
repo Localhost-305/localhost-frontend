@@ -5,10 +5,14 @@ import { StyledMenu } from './menu.style';
 
 const Menu = () => {
   const [current, setCurrent] = useState('Home');
-  const items: MenuProps['items'] = [
+  const items: MenuProps['items'] = [ 
     {
-      label: 'Dashboard',
-      key: 'Dashboard',
+      label: 'Home',
+      key: 'Home',
+    },
+    {
+      label: 'Usuários',
+      key: 'Users',
     },
   ];
 

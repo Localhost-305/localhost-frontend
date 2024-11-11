@@ -1,6 +1,6 @@
 import { NavigateFunction, redirect } from "react-router-dom";
 
-import { AUTHORIZARION_KEY, NAME } from "../../constants/authorizationConstants";
+import { AUTHORIZARION_KEY, NAME, PERMISSIONS } from "../../constants/authorizationConstants";
 import { getItemStorage, removeItemStorage, setItemStorage } from "./storageProxy";
 import { UserType } from "../../types/UserType";
 import { connectionAPIGet } from "./connectionAPI";
@@ -18,7 +18,11 @@ export const setAuthorizationToken = (token: string) => {
 
 export const setUserData = (name: string) => {
     if(name) setItemStorage(NAME, name);
-    
+}
+
+export const setPermissions = (permissions: string[]) => {
+    const permissionsJson = JSON.stringify(permissions)
+    if(permissions)  localStorage.setItem(PERMISSIONS, permissionsJson);
 }
 
 export const getAuthorizationToken = () => getItemStorage(AUTHORIZARION_KEY);
