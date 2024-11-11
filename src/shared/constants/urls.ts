@@ -1,4 +1,4 @@
-const BASE_API_URL = 'http://3.88.14.52/api';
+const BASE_API_URL = 'http://54.159.40.73/api';
 
 export const URL_USER = `${BASE_API_URL}/users`;
 export const URL_AUTH = `${BASE_API_URL}/login`;
