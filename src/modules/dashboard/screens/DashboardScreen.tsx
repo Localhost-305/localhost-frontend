@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, notification, Upload } from 'antd';
 import { Select } from 'antd';
 import type { SelectProps } from 'antd';
 import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
@@ -37,6 +37,7 @@ import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.s
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
 import { CloseOutlined } from '@ant-design/icons'; 
 import { HiringRetentionType } from '../../../shared/types/HiringRetentionType';
+
 
 // BREADCRUMB
 const listBreadcrumb = [ { name: 'Home'} ]
@@ -81,6 +82,7 @@ const DashboardScreen = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [amountCollected, setAmountCollected] = useState<AmountCollectedType[]>([]);
   const [selectedMonths, setSelectedMonths] = useState(3);
+  let permissions = getItemStorage(PERMISSIONS);
 
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
@@ -90,10 +92,6 @@ const DashboardScreen = () => {
     setSelectedMonths(Number(event.target.value));
   };
 
-  let permissions = getItemStorage(PERMISSIONS);
-  if(permissions?.includes('allowed_to_see')){
-
-  }
 
   // ECHARTS
   const chartRefHist = useRef<HTMLDivElement>(null);
@@ -517,6 +515,11 @@ const DashboardScreen = () => {
     }
   }
 
+  useEffect(() => {
+    if (!permissions?.includes('allowed_to_see_money')) {
+    }
+  }, [permissions]);
+
   const handleJobChangeReset = (value: string | null) => {
     setSelectedJob(null);
   };
@@ -576,7 +579,7 @@ const DashboardScreen = () => {
     setContentDoubt(content);
     setIsModalDoubtsOpen(true);
   }
-
+  
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
       {isLoading && <FirstScreen />}
@@ -664,9 +667,9 @@ const DashboardScreen = () => {
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
           <h2 className="card-date">
-            <span>{retentions ? `${retentions.retentionDays} dias` : '0 dias'}</span>
+            <span>{retentions ? `${Math.floor(retentions.retentionDays)} dias` : '0 dias'}</span>
           </h2>
-          </StyledCard>
+        </StyledCard>
         <Tooltip title="Retenção Média" overlayClassName="custom-tooltip">
           <QuestionCircleOutlined style={{ marginBottom: window.innerWidth < 768 ? '3em' : '15em' }}
             onClick={() =>
@@ -680,60 +683,69 @@ const DashboardScreen = () => {
         <ScrollableDiv>
           <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '400px', marginBottom: '50px' }} />
         </ScrollableDiv>
-        <ScrollableDiv>
-          <h2>Custos Mensais de Contratação</h2>
-          <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
-          <div style={{ width: '100%', height: '300px', marginBottom: '50px' }} ref={chartRefCosts} />
-        </ScrollableDiv>
-        <ScrollableDiv>
-          <h2>Previsão e Histórico de Custos</h2>
-          <small>Neste gráfico mostra o histórico e a previsão dos custos</small>
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-            <select
-              value={selectedMonths}
-              onChange={handleMonthsChange}
-              style={{
-                  padding: '6px 12px',
-                  borderRadius: '8px', 
-                  border: '1px solid #ccc', 
-                  outline: 'none',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  backgroundColor: '#f9f9f9',
-                  marginRight: '5px' 
-              }}
-            >
-              <option value="3">3 meses</option>
-              <option value="6">6 meses</option>
-              <option value="9">9 meses</option>
-              <option value="12">12 meses</option>
-              <option value="24">24 meses</option>
-            </select>
-            <Select
-              value={selectedJob} 
-              onChange={handleJobChange} 
-              style={{ width: 200, marginRight: '5px' }}
-              options={options}
-              placeholder="Selecione uma vaga"
-            />
-            <button
-              onClick={() => handleJobChangeReset(null)}
-              style={{
-                backgroundColor: '#FFCCCC',
-                border: 'none', 
-                color: 'red', 
-                fontSize: '10px', 
-                cursor: 'pointer', 
-                fontWeight: 'bold', 
-                padding: '3px 5px', 
-                transition: 'color 0.3s ease', 
-              }}
-            >
-              <CloseOutlined style={{ fontSize: '18px' }} /> 
-            </button>
-          </div>
-          <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
-        </ScrollableDiv>
+        {permissions?.includes('allowed_to_see_money') ? (
+          <ScrollableDiv>
+            <h2>Custos Mensais de Contratação</h2>
+            <small>Neste gráfico mostra os custos totais de contratações ao longo dos meses. A linha tracejada é referente a media do custo representada no gráfico</small>
+            <div style={{ width: '100%', height: '300px', marginBottom: '50px' }} ref={chartRefCosts} />
+          </ScrollableDiv>
+        ) : (
+          <span>Acesso restrito</span>
+        )}
+        {permissions?.includes('allowed_to_see_money') ? (
+          <ScrollableDiv>
+            <h2>Previsão e Histórico de Custos</h2>
+            <small>Este gráfico exibe o histórico dos custos em azul e a previsão dos próximos meses em amarelo. 
+               A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.</small>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+              <select
+                value={selectedMonths}
+                onChange={handleMonthsChange}
+                style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px', 
+                    border: '1px solid #ccc', 
+                    outline: 'none',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    backgroundColor: '#f9f9f9',
+                    marginRight: '5px' 
+                }}
+              >
+                <option value="3">3 meses</option>
+                <option value="6">6 meses</option>
+                <option value="9">9 meses</option>
+                <option value="12">12 meses</option>
+                <option value="24">24 meses</option>
+              </select>
+              <Select
+                value={selectedJob} 
+                onChange={handleJobChange} 
+                style={{ width: 200, marginRight: '5px' }}
+                options={options}
+                placeholder="Selecione uma vaga"
+              />
+              <button
+                onClick={() => handleJobChangeReset(null)}
+                style={{
+                  backgroundColor: '#FFCCCC',
+                  border: 'none', 
+                  color: 'red', 
+                  fontSize: '10px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  padding: '3px 5px', 
+                  transition: 'color 0.3s ease', 
+                }}
+              >
+                <CloseOutlined style={{ fontSize: '18px' }} /> 
+              </button>
+            </div>
+            <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
+          </ScrollableDiv>
+           ) : (
+            <span>Acesso restrito</span>
+          )}
         <ScrollableDiv>
           <h2>Histórico de Candidaturas e Previsão</h2>
           <small>
@@ -741,7 +753,6 @@ const DashboardScreen = () => {
             A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.
           </small>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
-            <label htmlFor="analysisDepth" style={{ marginRight: '8px' }}>Profundidade de Análise:</label>
             <select
               id="analysisDepth"
               value={analysisDepth}
@@ -753,7 +764,8 @@ const DashboardScreen = () => {
                 outline: 'none',
                 fontSize: '14px',
                 cursor: 'pointer',
-                backgroundColor: '#f9f9f9' 
+                backgroundColor: '#f9f9f9',
+                marginRight: '5px' 
               }}>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
@@ -763,7 +775,7 @@ const DashboardScreen = () => {
             <Select
               value={selectedJob}
               onChange={handleJobChange}
-              style={{ width: 200 }}
+              style={{ width: 200, marginRight: '5px' }}
               options={options}
               placeholder="Selecione uma vaga"
             />
