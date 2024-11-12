@@ -20,7 +20,7 @@ import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_APPLICATIONS, URL_HIRING, URL_JOB } from '../../../shared/constants/urls';
+import { URL_APPLICATIONS, URL_HIRING, URL_JOB, URL_UPLOAD } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -356,7 +356,7 @@ const DashboardScreen = () => {
     formData.append("file", fileList[0].originFileObj);
 
     try {
-      const response = await axios.post("http://54.159.40.73/api/excel/upload", formData, {
+      const response = await axios.post(`${URL_UPLOAD}/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
