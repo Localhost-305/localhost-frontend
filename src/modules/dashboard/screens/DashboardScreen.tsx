@@ -356,10 +356,14 @@ const DashboardScreen = () => {
     formData.append("file", fileList[0].originFileObj);
 
     try {
+      // const response = await axios.post(`${URL_UPLOAD}/upload`, formData, {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
+      //   },
       const response = await axios.post(`${URL_UPLOAD}/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${getItemStorage(AUTHORIZARION_KEY)}`
         },
       });
       setNotification("Arquivo enviado com sucesso!", NotificationEnum.SUCCESS);
