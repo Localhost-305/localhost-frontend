@@ -38,7 +38,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: backend
+    runs-on: frontend
     steps:
       - name: Remove Docker container
         run: docker rm -f ${{ secrets.DOCKER_CONTAINER_FRONTEND }}
