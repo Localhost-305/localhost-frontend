@@ -4,13 +4,12 @@ import { Dropdown, Modal, Avatar, Button } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate, Link } from 'react-router-dom'; 
 import { logout } from "../../functions/connection/auth";
-import { HeaderContainer, MenuContainer, ContainerLogoName, StyledMenu } from "../menu/menu.style";
+import { HeaderContainer, ContainerLogoName, StyledMenu } from "../menu/menu.style";
 import { getItemStorage } from "../../functions/connection/storageProxy";
 import { NAME } from "../../constants/authorizationConstants";
 import { DashboardRoutesEnum } from '../../../modules/dashboard/routes';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserRoutesEnum } from '../../../modules/user/routes';
 

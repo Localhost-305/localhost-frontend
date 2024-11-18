@@ -101,6 +101,9 @@ const DashboardScreen = () => {
     ? jobs.filter((job: JobsType) => job.JobTitle === selectedJob)
     : jobs;
 
+  useEffect(() => {
+  }, [amountCollected]);  
+
   // EVENTS
   useEffect(() => {
     setLoading(true);

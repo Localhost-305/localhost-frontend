@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
  
-import '../styles/LoginScreen.module.css';
-import background from '../../../../public/logo local.svg';
-import FirstScreen from '../../firstScreen';
+import background from '../../../../public/logo-local.svg';
+import FirstScreen from '../../firstScreen/screens/FirstScreen';
 import Button from '../../../shared/components/buttons/button/Button';
 import styles from '../styles/LoginScreen.module.css';
 import Logo from '../../../../public/logo-sem-fundo.png';
