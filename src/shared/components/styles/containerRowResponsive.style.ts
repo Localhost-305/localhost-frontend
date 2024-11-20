@@ -1,15 +1,11 @@
 import styled from 'styled-components';
 
-interface ContainerRowResponsiveProps {
-    maxWidth: string;
-  }
-
-export const ContainerRowResponsive = styled.div<ContainerRowResponsiveProps>`
+export const ContainerRowResponsive = styled.div`
     display: flex;
     gap: 1em;
     flex-wrap: wrap; 
 
-    @media (max-width: ${(props) => props.maxWidth}) {
+    @media (max-width: 800px) {
         flex-direction: column;
         width: 100%; 
     }
