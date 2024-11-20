@@ -152,6 +152,7 @@ const User = () => {
             dataIndex: 'roleName',
             key: 'roleName',
             render: (_, user) => <p>{user.role ? user.role.roleName : "N/A"}</p>,
+            width: 150,
         },
         {
             title: 'Ações',
