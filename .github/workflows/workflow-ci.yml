@@ -36,5 +36,5 @@ jobs:
      #- name: Run integration tests
      #  run: npm run test:integration
 
-    #  - name: Run tests with coverage
-    #   run: npm run test:coverage
+      - name: Run tests with coverage
+        run: npm run test:coverage
