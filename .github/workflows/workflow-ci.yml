@@ -18,8 +18,8 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+     # - name: Install dependencies
+     #   run: npm install
         
       - name: Run npm ci
         run: npm ci
@@ -27,8 +27,8 @@ jobs:
       #- name: Build React app
       #  run: npm run build
 
-      #- name: Run tests
-      #  run: npm test
+      - name: Run tests
+        run: npm test
 
       #- name: Run unit tests
       #  run: npm run test:unit
