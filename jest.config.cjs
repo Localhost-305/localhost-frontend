@@ -8,7 +8,8 @@ module.exports = {
     },
     transform: {
         '^.+\\.(ts|tsx)$': 'ts-jest',
+        '^.+\\.js$': 'babel-jest',
         '^.+\\.svg$': 'jest-transform-stub',
     },
-    transformIgnorePatterns: ['<rootDir>/node_modules/'],
+    transformIgnorePatterns: [ 'node_modules/(?!(react-bootstrap|@restart|classnames)/)',],
 };

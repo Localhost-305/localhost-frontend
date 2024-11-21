@@ -5,6 +5,7 @@ import { useRequests } from '../src/shared/hooks/useRequests';
 import { useGlobalReducer } from '../src/store/reducers/globalReducer/useGlobalReducer';
 import { useUserReducer } from '../src/store/reducers/userReducer/useUserReducer';
 import { useLoading } from '../src/shared/components/loadingProvider/LoadingProvider';
+import { BrowserRouter } from 'react-router-dom';
 
 jest.mock('../src/store/reducers/userReducer/useUserReducer', () => ({
   useUserReducer: jest.fn(),
@@ -21,6 +22,19 @@ jest.mock('../src/shared/components/loadingProvider/LoadingProvider', () => ({
 jest.mock('../src/store/reducers/globalReducer/useGlobalReducer', () => ({
   useGlobalReducer: jest.fn(),
 }));
+
+  beforeAll(() => {
+    global.matchMedia = jest.fn().mockImplementation((query) => ({
+      matches: query.includes('min-width'), 
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), 
+      removeListener: jest.fn(), 
+      addEventListener: jest.fn(), 
+      removeEventListener: jest.fn(), 
+      dispatchEvent: jest.fn(),
+    }));
+  });
 
 describe('User Screen Integration Test', () => {
   beforeEach(() => {
@@ -51,12 +65,16 @@ describe('User Screen Integration Test', () => {
   });
 
   it('should edit a user successfully', async () => {
-    render(<User />);
+    render(
+      <BrowserRouter>
+        <User />
+      </BrowserRouter>
+    );
 
     expect(screen.getByText('Davi')).toBeInTheDocument();
     expect(screen.getByText('davi@email.com')).toBeInTheDocument();
 
-    const editButton = screen.getByRole('button', { name: /edit/i });
+    const editButton = await screen.findByTestId('edit-button');
     fireEvent.click(editButton);
 
     expect(screen.getByText(/dados do usuário/i)).toBeInTheDocument();

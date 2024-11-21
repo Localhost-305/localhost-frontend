@@ -158,7 +158,7 @@ const User = () => {
             key: 'action',
             width: 80,
             render: (_, user) => (
-                <EditTwoTone type="button" id="edit" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={() => showEditModal(user)} />
+                <EditTwoTone type="button" id="edit"  data-testid="edit-button" style={{ fontSize: '30px' }} twoToneColor='#007BFF' onClick={() => showEditModal(user)} />
             ),
         }
     ];
