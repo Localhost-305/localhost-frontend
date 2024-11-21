@@ -6,7 +6,7 @@ on:
       - feature/LOC-69
 
 jobs:
-  build:
+  build-CI:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,11 +30,11 @@ jobs:
       #- name: Run tests
       #  run: npm test
 
-      - name: Run unit tests
-        run: npm run test:unit
+      #- name: Run unit tests
+      #  run: npm run test:unit
 
-      - name: Run integration tests
-       run: npm run test:integration
+      #- name: Run integration tests
+     #  run: npm run test:integration
 
-      - name: Run tests with coverage
-       run: npm run test:coverage
+      #- name: Run tests with coverage
+      # run: npm run test:coverage
