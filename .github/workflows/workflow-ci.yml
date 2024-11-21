@@ -24,5 +24,17 @@ jobs:
       - name: Run npm ci
         run: npm ci
 
-      - name: Build React app
-        run: npm run build
+      #- name: Build React app
+      #  run: npm run build
+
+      #- name: Run tests
+      #  run: npm test
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+       run: npm run test:integration
+
+      - name: Run tests with coverage
+       run: npm run test:coverage
