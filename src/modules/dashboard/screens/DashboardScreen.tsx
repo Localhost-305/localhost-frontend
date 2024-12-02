@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import { EChartOption } from 'echarts';
-import { Button, DatePicker, TableColumnsType, notification, Tooltip, Modal, Upload } from 'antd';
+import { Button, DatePicker, TableColumnsType, Tooltip, Modal, Upload } from 'antd';
 import { Select } from 'antd';
 import type { SelectProps } from 'antd';
-import { QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { FileExcelOutlined, FilePdfOutlined, QuestionCircleOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from "axios";
 
 import '../../../shared/components/styles/customTooltip.css';
@@ -20,7 +20,7 @@ import { CandidatesType } from '../../../shared/types/CandidatesType';
 import { CandidateType } from '../../../shared/types/CandidateType';
 import { MethodsEnum } from '../../../shared/enums/methods.enum';
 import { useRequests } from '../../../shared/hooks/useRequests';
-import { URL_AMOUNT, URL_APPLICATIONS, URL_HIRING, URL_JOB, URL_QUANTITYAPPLICATIONS } from '../../../shared/constants/urls';
+import { URL_AMOUNT, URL_APPLICATIONS, URL_EXPORT, URL_EXPORT_PDF, URL_HIRING, URL_JOB, URL_QUANTITYAPPLICATIONS } from '../../../shared/constants/urls';
 import { StyledCard } from "../../dashboard/styles/Dashboard.style"
 import { useGlobalReducer } from '../../../store/reducers/globalReducer/useGlobalReducer';
 import { NotificationEnum } from '../../../shared/types/NotificationType';
@@ -37,6 +37,7 @@ import { ScrollableDiv } from '../../../shared/components/styles/scrollableDiv.s
 import { HistApplicationType } from '../../../shared/types/HistApplicationType';
 import { CloseOutlined } from '@ant-design/icons';
 import { HiringRetentionType } from '../../../shared/types/HiringRetentionType';
+import { getAuthorizationToken } from '../../../shared/functions/connection/auth';
 
 
 // BREADCRUMB
@@ -62,9 +63,9 @@ const columns: TableColumnsType<JobsType> = [
 const dateFormat = 'DD/MM/YYYY';
 
 const DashboardScreen = () => {
-  const {request} = useRequests();
-  const {setNotification} = useGlobalReducer();
-  const {isLoading, setLoading} = useLoading();
+  const { request } = useRequests();
+  const { setNotification } = useGlobalReducer();
+  const { isLoading, setLoading } = useLoading();
   const [monthlyCosts, setMonthlyCosts] = useState<HiringCostType[]>([]);
   const [jobs, setJobs] = useState<JobsType[]>([]);
   const [candidates, setCandidates] = useState<CandidatesType[]>([]);
@@ -322,9 +323,9 @@ const DashboardScreen = () => {
           .filter((item) => (item.year === currentDate.getFullYear() && item.month >= currentMonth) || (item.year > currentDate.getFullYear()))
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.collectedRevenue]);
 
-        
+
         let myChart = null;
-        if(chartRefLine.current) myChart = echarts.init(chartRefLine.current);
+        if (chartRefLine.current) myChart = echarts.init(chartRefLine.current);
 
         const option: EChartOption = {
           tooltip: {
@@ -359,7 +360,7 @@ const DashboardScreen = () => {
           ]
         };
 
-        if(myChart){
+        if (myChart) {
           myChart.setOption(option);
 
           return () => {
@@ -404,7 +405,7 @@ const DashboardScreen = () => {
           .map((item) => [`${String(item.month).padStart(2, '0')}-${item.year}`, item.quantityApplications]);
 
         let chart = null;
-        if(chartRefHist.current) chart = echarts.init(chartRefHist.current);
+        if (chartRefHist.current) chart = echarts.init(chartRefHist.current);
         const option: EChartOption = {
           tooltip: {
             trigger: 'axis',
@@ -457,7 +458,7 @@ const DashboardScreen = () => {
           ]
         };
 
-        if(chart){
+        if (chart) {
           chart.setOption(option);
 
           return () => {
@@ -569,6 +570,54 @@ const DashboardScreen = () => {
     setAnalysisDepth(Number(event.target.value));
   };
 
+  const handleExportExcel = async (data: any) => {
+    try {
+      const dataString = JSON.stringify(data);
+      const response = await axios.get(`${URL_EXPORT}/excel?dataString=${encodeURIComponent(dataString)}`, {
+        headers: {
+          'Authorization': `Bearer ${getAuthorizationToken()}`,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `data.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      console.error("Erro ao exportar o CSV:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleExportPDF = async (data: any) => {
+    try {
+      const dataString = JSON.stringify(data);
+      const response = await axios.get(`${URL_EXPORT_PDF}/pdf?dataString=${encodeURIComponent(dataString)}`, {
+        headers: {
+          'Authorization': `Bearer ${getAuthorizationToken()}`,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `data.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      console.error("Erro ao exportar o PDF:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // EXCEL
   const handleBeforeUpload = (file: File) => {
     const isExcel = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -587,7 +636,7 @@ const DashboardScreen = () => {
     setContentDoubt(content);
     setIsModalDoubtsOpen(true);
   }
-  
+
   return (
     <Screen listBreadcrumb={listBreadcrumb}>
       {isLoading && <FirstScreen />}
@@ -630,33 +679,38 @@ const DashboardScreen = () => {
         </div>
       </BoxButtons>
       <ContainerRowResponsive>
-        <ResponsiveTable columns={columns as any}
-          className="table-responsive"
-          dataSource={filteredJobs}
-          bordered
-          pagination={{ pageSize: 5 }}
-          rowKey={(doc: any) => doc.JobTitle}
-          components={{
-            header: {
-              cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
-                  {props.children}
-                </th>
-              ),
-            },
-        }}/>
+          <ResponsiveTable columns={columns as any}
+            className="table-responsive"
+            dataSource={filteredJobs}
+            bordered
+            pagination={{ pageSize: 5 }}
+            rowKey={(doc: any) => doc.JobTitle}
+            components={{
+              header: {
+                cell: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
+                  <th {...props} style={{ backgroundColor: 'var(--orange)', color: 'var(--white)' }}>
+                    {props.children}
+                  </th>
+                ),
+              },
+            }} />
         <Tooltip title="Tempo médio de contratação por cargo" overlayClassName="custom-tooltip">
-          <QuestionCircleOutlined  style={{ marginBottom: windowWidth < 768 ? '0em' : '15em' }}
-            onClick={() =>
-              showModalDoubts('Tempo médio de contratação por cargo',
-                'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
+            <QuestionCircleOutlined style={{ marginBottom: windowWidth < 768 ? '0em' : '15em' }}
+              onClick={() =>
+                showModalDoubts('Tempo médio de contratação por cargo',
+                  'Nesta tabela mostra o tempo médio de contratação por vaga considerando a hora de abertura e a hora de encerramento, dos cargos.')} />
         </Tooltip>
-
+        <FileExcelOutlined style={{ color: 'green', fontSize: '24px', }}
+            onClick={() => handleExportExcel(filteredJobs)}
+            title='Exportar Excel'/>
+        <FilePdfOutlined style={{ color: 'red', fontSize: '24px', }}
+            onClick={() => handleExportPDF(filteredJobs)}
+            title='Exportar PDF'/>
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Tempo Médio Total</h1>
-          <h2 className="card-date" style={{fontSize: '50px', margin: '35px 0px 0px 0px'}}>
-          <span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span>
+          <h2 className="card-date" style={{ fontSize: '50px', margin: '35px 0px 0px 0px' }}>
+            <span>{jobsAverageAll.length > 0 ? jobsAverageAll[0].AverageTime : 0} Horas</span>
           </h2>
         </StyledCard>
         <Tooltip title="Tempo médio de contratação" overlayClassName="custom-tooltip">
@@ -668,7 +722,7 @@ const DashboardScreen = () => {
         <StyledCard bordered>
           <div className="card-bg"></div>
           <h1 className="card-title">Retenção Média</h1>
-          <h2 className="card-date" style={{fontSize: '50px', margin: '35px 0px 0px 0px'}}>
+          <h2 className="card-date" style={{ fontSize: '50px', margin: '35px 0px 0px 0px' }}>
             <span>{retentions ? `${Math.floor(retentions.retentionDays)} dias` : '0 dias'}</span>
           </h2>
         </StyledCard>
@@ -680,7 +734,14 @@ const DashboardScreen = () => {
         </Tooltip>
       </ContainerRowResponsive>
       <LimitedContainer width={1200}>
-        <h2>Quantidade de Candidaturas por Cargo</h2>
+        <h2>Quantidade de Candidaturas por Cargo
+        <FileExcelOutlined style={{ color: 'green', fontSize: '24px', }}
+            onClick={() => handleExportExcel(candidate)}
+            title='Exportar Excel'/>
+        <FilePdfOutlined style={{ color: 'red', fontSize: '24px', }}
+            onClick={() => handleExportPDF(candidate)}
+            title='Exportar PDF'/>
+        </h2>
         <small>Neste gráfico mostra a quantidade de candidaturas feitas for cargo</small>
         <ScrollableDiv>
           <div key={'echarts'} ref={chartRef} className={styles.echartsContainer} style={{ height: '400px', marginBottom: '50px' }} />
@@ -697,21 +758,21 @@ const DashboardScreen = () => {
         {permissions?.includes('allowed_to_see_money') ? (
           <ScrollableDiv>
             <h2>Previsão e Histórico de Custos</h2>
-            <small>Este gráfico exibe o histórico dos custos em azul e a previsão dos próximos meses em amarelo. 
-               A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.</small>
+            <small>Este gráfico exibe o histórico dos custos em azul e a previsão dos próximos meses em amarelo.
+              A linha de previsão é calculada com base nos dados históricos usando uma regressão exponencial.</small>
             <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
               <select
                 value={selectedMonths}
                 onChange={handleMonthsChange}
                 style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px', 
-                    border: '1px solid #ccc', 
-                    outline: 'none',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    backgroundColor: '#f9f9f9',
-                    marginRight: '5px' 
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  outline: 'none',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: '#f9f9f9',
+                  marginRight: '5px'
                 }}
               >
                 <option value="3">3 meses</option>
@@ -721,8 +782,8 @@ const DashboardScreen = () => {
                 <option value="24">24 meses</option>
               </select>
               <Select
-                value={selectedJob} 
-                onChange={handleJobChange} 
+                value={selectedJob}
+                onChange={handleJobChange}
                 style={{ width: 200, marginRight: '5px' }}
                 options={options}
                 placeholder="Selecione uma vaga"
@@ -731,23 +792,23 @@ const DashboardScreen = () => {
                 onClick={() => handleJobChangeReset(null)}
                 style={{
                   backgroundColor: '#FFCCCC',
-                  border: 'none', 
-                  color: 'red', 
-                  fontSize: '10px', 
-                  cursor: 'pointer', 
-                  fontWeight: 'bold', 
-                  padding: '3px 5px', 
-                  transition: 'color 0.3s ease', 
+                  border: 'none',
+                  color: 'red',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  padding: '3px 5px',
+                  transition: 'color 0.3s ease',
                 }}
               >
-                <CloseOutlined style={{ fontSize: '18px' }} /> 
+                <CloseOutlined style={{ fontSize: '18px' }} />
               </button>
             </div>
             <div style={{ width: '100%', height: '300px' }} ref={chartRefLine} />
           </ScrollableDiv>
-           ) : (
-            <span>Acesso restrito</span>
-          )}
+        ) : (
+          <span>Acesso restrito</span>
+        )}
         <ScrollableDiv>
           <h2>Histórico de Candidaturas e Previsão</h2>
           <small>
@@ -767,7 +828,7 @@ const DashboardScreen = () => {
                 fontSize: '14px',
                 cursor: 'pointer',
                 backgroundColor: '#f9f9f9',
-                marginRight: '5px'  
+                marginRight: '5px'
               }}>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
