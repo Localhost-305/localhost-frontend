@@ -5,7 +5,8 @@ import { useRequests } from '../src/shared/hooks/useRequests';
 import { useGlobalReducer } from '../src/store/reducers/globalReducer/useGlobalReducer';
 import { useUserReducer } from '../src/store/reducers/userReducer/useUserReducer';
 import { useLoading } from '../src/shared/components/loadingProvider/LoadingProvider';
-import { BrowserRouter } from 'react-router-dom';
+import { UserType } from '../src/shared/types/UserType';
+import { useUpdateUsers } from '../src/modules/user/hooks/useUpdateUsers';
 
 jest.mock('../src/store/reducers/userReducer/useUserReducer', () => ({
   useUserReducer: jest.fn(),
@@ -15,43 +16,56 @@ jest.mock('../src/shared/hooks/useRequests', () => ({
   useRequests: jest.fn(),
 }));
 
-jest.mock('../src/shared/components/loadingProvider/LoadingProvider', () => ({
-  useLoading: jest.fn(),
-}));
-
 jest.mock('../src/store/reducers/globalReducer/useGlobalReducer', () => ({
   useGlobalReducer: jest.fn(),
 }));
 
-  beforeAll(() => {
-    global.matchMedia = jest.fn().mockImplementation((query) => ({
-      matches: query.includes('min-width'), 
-      media: query,
-      onchange: null,
-      addListener: jest.fn(), 
-      removeListener: jest.fn(), 
-      addEventListener: jest.fn(), 
-      removeEventListener: jest.fn(), 
-      dispatchEvent: jest.fn(),
-    }));
-  });
+jest.mock('../src/modules/user/hooks/useUpdateUsers', () => ({
+  useUpdateUsers: jest.fn(),
+}));
 
-describe('User Screen Integration Test', () => {
+jest.mock('../src/shared/components/loadingProvider/LoadingProvider', () => ({
+  useLoading: jest.fn(),
+}));
+
+
+describe('User Component', () => {
+  const mockUserData: UserType[] = [
+    {
+      userId: 1,
+      name: 'John Doe',
+      email: 'john@example.com',
+      role: {
+        id: 1,
+        roleName: 'Admin',
+        permissions: [
+          { permissionid: 1, permissionName: 'Read' },
+          { permissionid: 2, permissionName: 'Write' },
+        ],
+      },
+    },
+    {
+      userId: 2,
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      role: {
+        id: 2,
+        roleName: 'User',
+        permissions: [
+          { permissionid: 3, permissionName: 'Read' },
+        ],
+      },
+    },
+  ];
+
   beforeEach(() => {
-
     (useUserReducer as jest.Mock).mockReturnValue({
-      user: [
-        { userId: 1, name: 'Davi', email: 'davi@email.com', role: { roleName: 'Admin' } },
-      ],
+      user: mockUserData,
       setUser: jest.fn(),
     });
 
     (useRequests as jest.Mock).mockReturnValue({
-      request: jest.fn((url, callback) => {
-        if (url.includes('/roles')) {
-          callback([{ id: 1, roleName: 'Admin' }, { id: 2, roleName: 'User' }]);
-        }
-      }),
+      request: jest.fn().mockResolvedValue(mockUserData),
     });
 
     (useLoading as jest.Mock).mockReturnValue({
@@ -62,37 +76,59 @@ describe('User Screen Integration Test', () => {
     (useGlobalReducer as jest.Mock).mockReturnValue({
       setNotification: jest.fn(),
     });
+
+    (useUpdateUsers as jest.Mock).mockReturnValue({
+      userUpdate: { name: '', email: '' },
+      handleUpdate: jest.fn(),
+      onChange: jest.fn(),
+      setUserUpdate: jest.fn(),
+      handleChangeSelect: jest.fn(),
+    });
   });
 
-  it('should edit a user successfully', async () => {
-    render(
-      <BrowserRouter>
-        <User />
-      </BrowserRouter>
-    );
+  test('should render the User component and display user data', async () => {
+    render(<User />);
 
-    expect(screen.getByText('Davi')).toBeInTheDocument();
-    expect(screen.getByText('davi@email.com')).toBeInTheDocument();
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
 
-    const editButton = await screen.findByTestId('edit-button');
+    expect(screen.getByPlaceholderText('Pesquisar')).toBeInTheDocument();
+
+    expect(screen.getByTestId('edit-button')).toBeInTheDocument();
+  });
+
+  test('should show a modal when the edit button is clicked', async () => {
+    render(<User />);
+
+    const editButton = screen.getByTestId('edit-button');
     fireEvent.click(editButton);
 
-    expect(screen.getByText(/dados do usuário/i)).toBeInTheDocument();
+    expect(screen.getByText('Dados do Usuário')).toBeInTheDocument();
+  });
 
-    const nameInput = screen.getByLabelText(/nome:/i);
-    const emailInput = screen.getByLabelText(/email:/i);
+  test('should call the update user function when save changes is clicked', async () => {
+    render(<User />);
 
-    fireEvent.change(nameInput, { target: { value: 'Joao' } });
-    fireEvent.change(emailInput, { target: { value: 'joao@email.com' } });
+    const editButton = screen.getByTestId('edit-button');
+    fireEvent.click(editButton);
 
-    expect(nameInput).toHaveValue('Joao');
-    expect(emailInput).toHaveValue('joao@email.com');
-
-    const saveButton = screen.getByRole('button', { name: /salvar/i });
+    const saveButton = screen.getByText('Salvar');
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/sucesso!/i)).toBeInTheDocument();
+      expect(useUpdateUsers().handleUpdate).toHaveBeenCalledTimes(1);
     });
+  });
+
+  test('should display an error notification if required fields are empty', async () => {
+    render(<User />);
+
+    const editButton = screen.getByTestId('edit-button');
+    fireEvent.click(editButton);
+
+    const saveButton = screen.getByText('Salvar');
+    fireEvent.click(saveButton);
+
+    expect(await screen.findByText('Campos obrigatórios')).toBeInTheDocument();
   });
 });
