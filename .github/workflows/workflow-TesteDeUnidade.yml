@@ -1,4 +1,4 @@
-name: Workflow de Integração Contínua
+name: Workflow de Integração Contínua Teste de Unidade
 
 on:
   push:
@@ -29,12 +29,4 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-     # - name: Run unit tests
-     #   run: npm run test:unit
-
-     #- name: Run integration tests
-     #  run: npm run test:integration
-
-    #  - name: Run tests with coverage
-    #    run: npm run test:coverage
+    
