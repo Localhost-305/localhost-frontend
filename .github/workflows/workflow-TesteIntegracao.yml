@@ -1,9 +1,9 @@
 name: Workflow de Integração Contínua - Testeb de Integração
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/LOC-69
+      - dev
 
 jobs:
   # Job para Testes de Integração
