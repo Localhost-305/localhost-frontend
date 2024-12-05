@@ -1,0 +1,42 @@
+name: Build and Prepare Artifact
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do Código
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Configurar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: npm
+
+      # 3. Instalar Dependências
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build da Aplicação
+      - name: Build the application
+        run: npm run build
+
+      # 5. Empacotar o Artefato (ZIP do diretório `build/`)
+      - name: Archive build folder
+        run: |
+          zip -r build-artifact.zip build
+
+      # 6. Fazer Upload do Artefato (usando GitHub Actions Artifacts)
+      - name: Upload artifact for deploy
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: build-artifact.zip

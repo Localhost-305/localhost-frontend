@@ -1,12 +1,16 @@
-name: Workflow de Integração Contínua
+name: Workflow de Integração Contínua Teste de Unidade
 
 on:
   push:
-    branches:
-      - feature/LOC-69
-
+    branches-ignore: # Ignora pushes nas branches main e dev
+      - main
+      - dev
 jobs:
-  build-CI:
+  testeDeUnidade:
+    if: >
+      startsWith(github.event.head_commit.message, 'feature') ||
+      startsWith(github.event.head_commit.message, 'fix') ||
+      startsWith(github.event.head_commit.message, 'bug')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,12 +33,4 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-     # - name: Run unit tests
-     #   run: npm run test:unit
-
-     #- name: Run integration tests
-     #  run: npm run test:integration
-
-    #  - name: Run tests with coverage
-    #    run: npm run test:coverage
+    
